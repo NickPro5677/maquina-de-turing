@@ -122,7 +122,7 @@
         <div class="tarjeta">
           <h2>Tabla de transiciones</h2>
           <p class="texto-2 pequeno">Se resalta la regla que se aplicará en el próximo paso.</p>
-          <div class="tabla-envoltura">
+          <div class="tabla-envoltura" tabindex="0" role="region" aria-label="Tabla de transiciones">
             <table class="tabla" id="tabla-reglas">
               <thead><tr><th scope="col">Estado</th><th scope="col">Lee</th><th scope="col">Escribe</th><th scope="col">Mueve</th><th scope="col">Nuevo estado</th></tr></thead>
               <tbody></tbody>
@@ -133,7 +133,7 @@
         <div class="tarjeta">
           <h2>Traza paso a paso</h2>
           <p class="texto-2 pequeno">El cabezal está en [ ].</p>
-          <div class="tabla-envoltura traza">
+          <div class="tabla-envoltura traza" tabindex="0" role="region" aria-label="Traza paso a paso">
             <table class="tabla" id="tabla-traza">
               <thead><tr><th scope="col">Paso</th><th scope="col">Cinta</th><th scope="col">Estado</th><th scope="col">Regla aplicada</th></tr></thead>
               <tbody></tbody>
@@ -163,7 +163,7 @@
           <label class="campo"><span>Estados de aceptación</span><input id="ed-acepta" type="text" spellcheck="false" placeholder="opcional"></label>
           <label class="campo"><span>Estados de rechazo</span><input id="ed-rechaza" type="text" spellcheck="false" placeholder="opcional"></label>
         </div>
-        <div class="tabla-envoltura">
+        <div class="tabla-envoltura tabla-editor-envoltura">
           <table class="tabla tabla-editor" id="tabla-editor">
             <thead><tr><th scope="col">#</th><th scope="col">Estado</th><th scope="col">Lee</th><th scope="col">Escribe</th><th scope="col">Mueve</th><th scope="col">Nuevo estado</th><th scope="col"><span class="oculto">Borrar</span></th></tr></thead>
             <tbody></tbody>

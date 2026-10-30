@@ -366,13 +366,13 @@ function cambioEditor(redibujar) {
     $('#tabla-editor tbody').innerHTML = ed.def.reglas.map((r, i) => `
       <tr data-i="${i}">
         <td>${i + 1}</td>
-        <td><input type="text" data-campo="estado" value="${escapar(r.estado)}" aria-label="Fila ${i + 1}: estado" spellcheck="false"></td>
-        <td><input type="text" data-campo="lee" value="${escapar(r.lee)}" maxlength="1" aria-label="Fila ${i + 1}: lee" spellcheck="false"></td>
-        <td><input type="text" data-campo="escribe" value="${escapar(r.escribe)}" maxlength="1" aria-label="Fila ${i + 1}: escribe" spellcheck="false"></td>
-        <td><select data-campo="mueve" aria-label="Fila ${i + 1}: mueve">
+        <td data-l="Estado"><input type="text" data-campo="estado" value="${escapar(r.estado)}" aria-label="Fila ${i + 1}: estado" spellcheck="false"></td>
+        <td data-l="Lee"><input type="text" data-campo="lee" value="${escapar(r.lee)}" maxlength="1" aria-label="Fila ${i + 1}: lee" spellcheck="false"></td>
+        <td data-l="Escribe"><input type="text" data-campo="escribe" value="${escapar(r.escribe)}" maxlength="1" aria-label="Fila ${i + 1}: escribe" spellcheck="false"></td>
+        <td data-l="Mueve"><select data-campo="mueve" aria-label="Fila ${i + 1}: mueve">
           ${['I', 'D', 'N'].map((x) => `<option value="${x}" ${r.mueve === x ? 'selected' : ''}>${x} · ${{ I: 'izquierda', D: 'derecha', N: 'no se mueve' }[x]}</option>`).join('')}
         </select></td>
-        <td><input type="text" data-campo="nuevo" value="${escapar(r.nuevo)}" aria-label="Fila ${i + 1}: nuevo estado" spellcheck="false"></td>
+        <td data-l="Nuevo estado"><input type="text" data-campo="nuevo" value="${escapar(r.nuevo)}" aria-label="Fila ${i + 1}: nuevo estado" spellcheck="false"></td>
         <td><button class="borrar" aria-label="Borrar fila ${i + 1}" title="Borrar">×</button></td>
       </tr>`).join('');
   }
