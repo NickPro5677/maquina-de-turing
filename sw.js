@@ -1,5 +1,5 @@
 /* Service worker: guarda los archivos de la web para que funcione sin internet. */
-const VERSION = 'maquina-turing-v1.0.0';
+const VERSION = 'maquina-turing-v1.0.1';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/estilos.css',
   './src/app.js', './src/motor/index.js', './src/motor/maquina.js', './src/motor/ejemplos.js',
@@ -18,11 +18,12 @@ self.addEventListener('activate', (e) => {
     .then(() => self.clients.claim()));
 });
 
-// Primero la caché; si no está, la red (y se guarda para la próxima vez).
+// Primero la red (para recibir mejoras); si no hay conexión, la copia guardada.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
-  e.respondWith(caches.match(e.request, { ignoreSearch: true }).then((r) => r || fetch(e.request).then((resp) => {
+  e.respondWith(fetch(e.request).then((resp) => {
     if (resp.ok) { const copia = resp.clone(); caches.open(VERSION).then((c) => c.put(e.request, copia)); }
     return resp;
-  })));
+  }).catch(() => caches.match(e.request, { ignoreSearch: true })
+    .then((r) => r || (e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))));
 });
