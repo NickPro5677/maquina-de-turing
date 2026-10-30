@@ -1,5 +1,7 @@
 # Máquina de Turing · simulador 2D y 3D
 
+[![CI](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml/badge.svg)](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml) [![GitHub Pages](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/pages.yml/badge.svg)](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/pages.yml) [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+
 Simulador interactivo y explicado de la **máquina de Turing**, en español. Muestra la máquina en **2D** (cinta, cabezal, estado y tabla de reglas) y en **3D** (una máquina física que baja el brazo, lee, escribe y mueve la cinta). Funciona en el teléfono, en la computadora y en un proyector, **sin internet**.
 
 **Demo en vivo:** https://nickpro5677.github.io/maquina-de-turing/

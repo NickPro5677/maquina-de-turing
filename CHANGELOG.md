@@ -1,5 +1,13 @@
 # Cambios
 
+## v1.0.1 · 2026-10-30
+
+- Móvil: el menú superior se muestra en dos filas y ya no se desplaza de lado.
+- Móvil: cada regla del editor se muestra como una tarjeta; la tabla ya no se desplaza de lado.
+- Accesibilidad: mejor contraste en la cinta y en las pestañas 2D/3D, etiquetas de los campos legibles por lectores de pantalla y tablas desplazables que se pueden enfocar con el teclado.
+- Sin internet: el service worker ahora busca primero la versión nueva y usa la copia guardada solo si no hay conexión, así las mejoras llegan sin borrar datos.
+- README: insignias de CI, Pages y licencia; capturas actualizadas.
+
 ## v1.0.0 · 2026-10-30
 
 Primera versión.
