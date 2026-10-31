@@ -5,6 +5,7 @@
 export const EJEMPLOS = [
   {
     id: 'sumar-uno',
+    en: { nombre: "Add 1 in unary", resumen: "Turns 111 (3) into 1111 (4). The classic two-rule example.", descripcion: "In unary a number n is written with n ones: 3 = 111. The head starts on the first 1 in q0, moves right while it reads 1 and, at the first blank, writes a 1 and halts in qF." },
     nombre: 'Sumar 1 en unario',
     resumen: 'Convierte 111 (3) en 1111 (4). El ejemplo clásico de dos reglas.',
     descripcion: 'En unario un número n se escribe con n unos: 3 = 111. El cabezal empieza sobre el primer 1 en q0, avanza a la derecha mientras lee 1 y, al encontrar el primer blanco, escribe un 1 y para en qF.',
@@ -18,6 +19,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'invertir-bits',
+    en: { nombre: "Invert bits", resumen: "Changes every 0 into 1 and every 1 into 0: 1011 → 0100.", descripcion: "It walks the tape from left to right. In each cell it writes the opposite bit. When it reaches the blank, it halts." },
     nombre: 'Invertir bits',
     resumen: 'Cambia cada 0 por 1 y cada 1 por 0: 1011 → 0100.',
     descripcion: 'Recorre la cinta de izquierda a derecha. En cada casilla escribe el bit contrario. Al llegar al blanco, para.',
@@ -32,6 +34,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'sumar-unarios',
+    en: { nombre: "Add two unary numbers", resumen: "11+111 → 11111 (2 + 3 = 5).", descripcion: "Input format: two unary numbers separated by “+”, for example 11+111. The machine turns the “+” into a 1 and then erases the last 1 on the right." },
     nombre: 'Sumar dos números unarios',
     resumen: '11+111 → 11111 (2 + 3 = 5).',
     descripcion: 'Formato de entrada: dos números en unario separados por «+», por ejemplo 11+111. La máquina cambia el «+» por un 1 y luego borra el último 1 de la derecha.',
@@ -48,6 +51,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'incrementar-binario',
+    en: { nombre: "Binary increment", resumen: "Adds 1 to a binary number: 1011 (11) → 1100 (12).", descripcion: "First it goes to the end of the number (q0). Then, from the right (q1), it turns 1s into 0s while there is a “carry” and writes a 1 on the first 0 or blank it finds." },
     nombre: 'Incrementador binario',
     resumen: 'Suma 1 a un número binario: 1011 (11) → 1100 (12).',
     descripcion: 'Primero va al final del número (q0). Luego, desde la derecha (q1), cambia los 1 por 0 mientras haya «acarreo» y escribe un 1 en el primer 0 o blanco que encuentre.',
@@ -65,6 +69,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'palindromo',
+    en: { nombre: "Palindrome", resumen: "Does it read the same forwards and backwards? 0110 → accepts; 011 → rejects.", descripcion: "It erases the first symbol and “remembers” it with the state (q1 = it was 0, q2 = it was 1). It goes to the end and compares with the last one. If they match, it erases it and goes back to the start; if not, it rejects. If the tape ends up empty, it accepts." },
     nombre: 'Palíndromo',
     resumen: '¿Se lee igual al derecho y al revés? 0110 → acepta; 011 → rechaza.',
     descripcion: 'Borra el primer símbolo y lo «recuerda» con el estado (q1 = era 0, q2 = era 1). Va al final y compara con el último. Si coinciden, lo borra y vuelve al inicio; si no, rechaza. Si la cinta queda vacía, acepta.',
@@ -95,7 +100,65 @@ export const EJEMPLOS = [
     ],
   },
   {
+    id: 'copiar-unario',
+    nombre: 'Copiar una cadena',
+    resumen: 'Duplica un número unario: 111 → 111_111.',
+    descripcion: 'Marca un 1 con X, cruza el separador y añade un 1 al final de la copia. Vuelve a la X y repite. Cuando no quedan unos sin marcar, cambia las X otra vez por 1.',
+    en: { nombre: "Copy a string", resumen: "Duplicates a unary number: 111 → 111_111.", descripcion: "It marks a 1 with X, crosses the separator and appends a 1 to the end of the copy. It returns to the X and repeats. When no unmarked ones are left, it turns the Xs back into 1s." },
+    entrada: '111',
+    inicial: 'q0',
+    finales: ['qF'],
+    reglas: [
+      ['q0', '1', 'X', 'D', 'q1'],
+      ['q0', '_', '_', 'I', 'q4'],
+      ['q1', '1', '1', 'D', 'q1'],
+      ['q1', '_', '_', 'D', 'q2'],
+      ['q2', '1', '1', 'D', 'q2'],
+      ['q2', '_', '1', 'I', 'q3'],
+      ['q3', '1', '1', 'I', 'q3'],
+      ['q3', '_', '_', 'I', 'q5'],
+      ['q5', '1', '1', 'I', 'q5'],
+      ['q5', 'X', 'X', 'D', 'q0'],
+      ['q4', 'X', '1', 'I', 'q4'],
+      ['q4', '_', '_', 'D', 'qF'],
+    ],
+  },
+  {
+    id: 'paridad',
+    nombre: 'Paridad',
+    resumen: '¿Hay una cantidad par de unos? 1111 → acepta; 111 → rechaza.',
+    descripcion: 'Dos estados recuerdan si hasta ahora vio una cantidad par (qPar) o impar (qImpar) de unos. Al llegar al blanco, acepta si está en qPar y rechaza si está en qImpar.',
+    en: { nombre: "Parity", resumen: "Is there an even number of ones? 1111 → accepts; 111 → rejects.", descripcion: "Two states remember whether it has seen an even (qPar) or odd (qImpar) number of ones so far. At the blank, it accepts in qPar and rejects in qImpar." },
+    entrada: '1111',
+    inicial: 'qPar',
+    finales: [],
+    acepta: ['qSi'],
+    rechaza: ['qNo'],
+    reglas: [
+      ['qPar', '1', '1', 'D', 'qImpar'],
+      ['qImpar', '1', '1', 'D', 'qPar'],
+      ['qPar', '_', '_', 'N', 'qSi'],
+      ['qImpar', '_', '_', 'N', 'qNo'],
+    ],
+  },
+  {
+    id: 'doble-binario',
+    nombre: 'Multiplicar por 2 en binario',
+    resumen: 'Añade un 0 a la derecha: 101 (5) → 1010 (10).',
+    descripcion: 'En binario, multiplicar por 2 es escribir un 0 al final, igual que multiplicar por 10 en decimal. La máquina va al final del número y escribe el 0.',
+    en: { nombre: "Multiply by 2 in binary", resumen: "Appends a 0 on the right: 101 (5) → 1010 (10).", descripcion: "In binary, multiplying by 2 means writing a 0 at the end, just like multiplying by 10 in decimal. The machine goes to the end of the number and writes the 0." },
+    entrada: '101',
+    inicial: 'q0',
+    finales: ['qF'],
+    reglas: [
+      ['q0', '0', '0', 'D', 'q0'],
+      ['q0', '1', '1', 'D', 'q0'],
+      ['q0', '_', '0', 'N', 'qF'],
+    ],
+  },
+  {
     id: 'castor-2',
+    en: { nombre: "2-state busy beaver", resumen: "Empty tape → 4 ones in 6 steps, the maximum for 2 states.", descripcion: "A “busy beaver” is the machine that, with n states and starting on an empty tape, writes the most ones before halting. With 2 states the record is 4 ones (in 6 steps)." },
     nombre: 'Castor atareado de 2 estados',
     resumen: 'Cinta vacía → 4 unos en 6 pasos, el máximo para 2 estados.',
     descripcion: 'Un «castor atareado» es la máquina que, con n estados y empezando en una cinta vacía, escribe la mayor cantidad de unos antes de parar. Con 2 estados el récord es 4 unos (en 6 pasos).',
@@ -111,6 +174,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'castor-3',
+    en: { nombre: "3-state busy beaver", resumen: "Empty tape → 6 ones in 14 steps, the most ones for 3 states.", descripcion: "With 3 states the maximum number of ones is 6 (this machine does it in 14 steps). The maximum number of steps for 3 states is 21, but that is achieved by another machine that leaves only 5 ones." },
     nombre: 'Castor atareado de 3 estados',
     resumen: 'Cinta vacía → 6 unos en 14 pasos, el máximo de unos para 3 estados.',
     descripcion: 'Con 3 estados el máximo de unos es 6 (esta máquina lo logra en 14 pasos). El máximo de pasos para 3 estados es 21, pero lo consigue otra máquina que deja solo 5 unos.',
@@ -128,6 +192,7 @@ export const EJEMPLOS = [
   },
   {
     id: 'bucle',
+    en: { nombre: "Endless loop", resumen: "Never halts: useful to see the step limit and the halting problem.", descripcion: "It goes back and forth between two cells forever. The simulator stops it at the step limit, but in general there is no algorithm that can tell in advance whether any given machine will halt." },
     nombre: 'Bucle sin fin',
     resumen: 'Nunca para: sirve para ver el límite de pasos y el problema de la parada.',
     descripcion: 'Va y viene entre dos casillas para siempre. El simulador lo corta al llegar al límite de pasos, pero en general no existe un algoritmo que diga de antemano si una máquina cualquiera parará.',
@@ -142,6 +207,12 @@ export const EJEMPLOS = [
     ],
   },
 ];
+
+/** Nombre, resumen y descripción en el idioma pedido (español por defecto). */
+export function textoEjemplo(e, idioma = 'es') {
+  const t = idioma === 'en' && e.en ? e.en : e;
+  return { nombre: t.nombre, resumen: t.resumen, descripcion: t.descripcion };
+}
 
 export function buscarEjemplo(id) {
   return EJEMPLOS.find((e) => e.id === id) ?? null;

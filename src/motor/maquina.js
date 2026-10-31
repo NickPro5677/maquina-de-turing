@@ -2,6 +2,7 @@
  * Motor de la máquina de Turing.
  * Código puro: no usa el DOM, así que funciona igual en el navegador y en Node.
  */
+import { tm, letraMov } from './textos.js';
 
 /** Símbolo blanco: así se ve una casilla vacía de la cinta. */
 export const BLANCO = '_';
@@ -11,6 +12,9 @@ export const MOVIMIENTOS = Object.freeze({ I: -1, D: 1, N: 0 });
 
 /** Nombre legible de cada movimiento. */
 export const NOMBRE_MOVIMIENTO = Object.freeze({ I: 'izquierda', D: 'derecha', N: 'no se mueve' });
+
+/** Máximo de reglas que se aceptan al importar (protege de archivos enormes). */
+export const MAX_REGLAS = 500;
 
 /** Límite de pasos por defecto para no quedarse colgado en un bucle infinito. */
 export const LIMITE_PASOS = 10000;
@@ -88,35 +92,35 @@ export function validar(def) {
   const conReglas = new Set(def.reglas.map((r) => r.estado).filter(Boolean));
   const vistos = new Map();
 
-  if (!def.inicial) errores.push({ tipo: 'inicial', mensaje: 'Falta el estado inicial.' });
-  if (parada.size === 0) avisos.push({ tipo: 'sin-final', mensaje: 'No hay estados finales: la máquina solo parará cuando no encuentre regla.' });
+  if (!def.inicial) errores.push({ tipo: 'inicial', mensaje: tm('val.inicial') });
+  if (parada.size === 0) avisos.push({ tipo: 'sin-final', mensaje: tm('val.sinFinal') });
 
   def.reglas.forEach((r, i) => {
     const fila = i + 1;
-    if (!r.estado) errores.push({ tipo: 'vacio', fila, mensaje: `Fila ${fila}: falta el estado.` });
-    if (!r.nuevo) errores.push({ tipo: 'vacio', fila, mensaje: `Fila ${fila}: falta el nuevo estado.` });
+    if (!r.estado) errores.push({ tipo: 'vacio', fila, mensaje: tm('val.faltaEstado', { fila }) });
+    if (!r.nuevo) errores.push({ tipo: 'vacio', fila, mensaje: tm('val.faltaNuevo', { fila }) });
     for (const campo of ['lee', 'escribe']) {
       if ([...r[campo]].length !== 1) {
-        errores.push({ tipo: 'simbolo', fila, mensaje: `Fila ${fila}: «${campo}» debe ser un solo símbolo (ahora es «${r[campo]}»).` });
+        errores.push({ tipo: 'simbolo', fila, mensaje: tm('val.simbolo', { fila, campo, valor: r[campo] }) });
       }
     }
     if (!MOVIMIENTOS.hasOwnProperty(r.mueve)) {
-      errores.push({ tipo: 'movimiento', fila, mensaje: `Fila ${fila}: movimiento «${r.mueve}» no válido. Usa I (izquierda), D (derecha) o N (no se mueve).` });
+      errores.push({ tipo: 'movimiento', fila, mensaje: tm('val.movimiento', { fila, valor: r.mueve }) });
     }
     if (r.estado) {
       const clave = `${r.estado}\u0000${r.lee}`;
       if (vistos.has(clave)) {
-        errores.push({ tipo: 'duplicada', fila, mensaje: `Fila ${fila}: regla repetida para (${r.estado}, ${r.lee}); ya existe en la fila ${vistos.get(clave)}. La máquina debe ser determinista.` });
+        errores.push({ tipo: 'duplicada', fila, mensaje: tm('val.duplicada', { fila, estado: r.estado, lee: r.lee, otra: vistos.get(clave) }) });
       } else vistos.set(clave, fila);
-      if (parada.has(r.estado)) avisos.push({ tipo: 'regla-en-final', fila, mensaje: `Fila ${fila}: ${r.estado} es un estado de parada; esta regla nunca se usará.` });
+      if (parada.has(r.estado)) avisos.push({ tipo: 'regla-en-final', fila, mensaje: tm('val.reglaEnFinal', { fila, estado: r.estado }) });
     }
     if (r.nuevo && !conReglas.has(r.nuevo) && !parada.has(r.nuevo)) {
-      errores.push({ tipo: 'estado-desconocido', fila, mensaje: `Fila ${fila}: el estado «${r.nuevo}» no tiene reglas ni es estado final.` });
+      errores.push({ tipo: 'estado-desconocido', fila, mensaje: tm('val.estadoDesconocido', { fila, estado: r.nuevo }) });
     }
   });
 
   if (def.inicial && !conReglas.has(def.inicial) && !parada.has(def.inicial)) {
-    errores.push({ tipo: 'estado-desconocido', mensaje: `El estado inicial «${def.inicial}» no tiene reglas.` });
+    errores.push({ tipo: 'estado-desconocido', mensaje: tm('val.inicialSinReglas', { estado: def.inicial }) });
   }
 
   // Alfabeto: símbolos que aparecen en las reglas, la entrada y el blanco.
@@ -124,7 +128,7 @@ export function validar(def) {
   def.reglas.forEach((r) => { alfabeto.add(r.lee); alfabeto.add(r.escribe); });
   for (const s of def.entrada) {
     if (!alfabeto.has(s) && s !== ' ') {
-      avisos.push({ tipo: 'entrada', mensaje: `La entrada usa «${s}», que ninguna regla lee ni escribe.` });
+      avisos.push({ tipo: 'entrada', mensaje: tm('val.entrada', { s }) });
       alfabeto.add(s);
     }
   }
@@ -133,7 +137,7 @@ export function validar(def) {
     if (parada.has(q)) continue;
     const faltan = [...alfabeto].filter((s) => !vistos.has(`${q}\u0000${s}`));
     if (faltan.length) {
-      avisos.push({ tipo: 'faltante', estado: q, simbolos: faltan, mensaje: `En ${q} no hay regla para leer ${faltan.map((s) => `«${s}»`).join(', ')}: si ocurre, la máquina se detiene.` });
+      avisos.push({ tipo: 'faltante', estado: q, simbolos: faltan, mensaje: tm('val.faltante', { estado: q, simbolos: faltan }) });
     }
   }
   return { valido: errores.length === 0, errores, avisos, alfabeto: [...alfabeto] };
@@ -147,11 +151,11 @@ export function buscarRegla(def, estado, simbolo) {
 /** Texto corto de una regla, como en la guía: «lee 1 → escribe 1, D». */
 export function describirRegla(r, parada = false) {
   if (!r) return '';
-  const partes = [`lee ${r.lee} → escribe ${r.escribe}`];
-  if (r.mueve !== 'N') partes.push(r.mueve);
-  else if (!parada) partes.push('no se mueve');
-  if (parada) partes.push('para');
-  else if (r.nuevo !== r.estado) partes.push(`pasa a ${r.nuevo}`);
+  const partes = [tm('regla.lee', r)];
+  if (r.mueve !== 'N') partes.push(letraMov(r.mueve));
+  else if (!parada) partes.push(tm('regla.quieto'));
+  if (parada) partes.push(tm('regla.para'));
+  else if (r.nuevo !== r.estado) partes.push(tm('regla.pasa', r));
   return partes.join(', ');
 }
 
@@ -330,13 +334,13 @@ export function cintaTraza(m) {
 
 /** Frase final según por qué paró la máquina. */
 export function textoParada(m) {
-  const res = m.resultado() || '(cinta vacía)';
+  const res = m.resultado() || tm('fin.vacia');
   switch (m.motivo) {
-    case 'acepta': return `FIN: acepta (${m.estado})`;
-    case 'rechaza': return `FIN: rechaza (${m.estado})`;
-    case 'final': return `FIN: resultado ${res}`;
-    case 'sin-regla': return `Se detiene: no hay regla para (${m.estado}, ${m.leer()})`;
-    case 'limite': return `Límite de ${m.limitePasos} pasos alcanzado`;
+    case 'acepta': return tm('fin.acepta', { estado: m.estado });
+    case 'rechaza': return tm('fin.rechaza', { estado: m.estado });
+    case 'final': return tm('fin.final', { res });
+    case 'sin-regla': return tm('fin.sinRegla', { estado: m.estado, s: m.leer() });
+    case 'limite': return tm('fin.limite', { n: m.limitePasos });
     default: return '';
   }
 }
@@ -354,12 +358,12 @@ export function parsearReglas(texto) {
     if (!l) return;
     const m = l.match(/^(.*?)\s*,\s*(.*?)\s*(?:->|→)\s*(.*?)\s*,\s*(.*?)\s*,\s*(.*?)$/);
     if (!m) {
-      errores.push({ linea: i + 1, mensaje: `Línea ${i + 1}: no se entiende «${l}». Formato: estado, lee -> escribe, mueve, nuevo` });
+      errores.push({ linea: i + 1, mensaje: tm('txt.noSeEntiende', { n: i + 1, l }) });
       return;
     }
     const mueve = normalizarMovimiento(m[4]);
     if (!mueve) {
-      errores.push({ linea: i + 1, mensaje: `Línea ${i + 1}: movimiento «${m[4]}» no válido (usa I, D o N).` });
+      errores.push({ linea: i + 1, mensaje: tm('txt.movimiento', { n: i + 1, m: m[4] }) });
       return;
     }
     reglas.push({ estado: m[1], lee: normalizarSimbolo(m[2]), escribe: normalizarSimbolo(m[3]), mueve, nuevo: m[5] });
@@ -369,7 +373,7 @@ export function parsearReglas(texto) {
 
 /** Reglas como texto (lo inverso de parsearReglas). */
 export function reglasATexto(reglas) {
-  return reglas.map((r) => `${r.estado}, ${r.lee} -> ${r.escribe}, ${r.mueve}, ${r.nuevo}`).join('\n');
+  return reglas.map((r) => `${r.estado}, ${r.lee} -> ${r.escribe}, ${letraMov(r.mueve)}, ${r.nuevo}`).join('\n');
 }
 
 /** Exporta una definición a JSON bonito. */
@@ -390,12 +394,38 @@ export function exportarJSON(def) {
   }, null, 2);
 }
 
-/** Importa una definición desde JSON. Lanza un Error con mensaje claro si falla. */
+/**
+ * Importa una definición desde JSON y revisa su forma (esquema «maquina-de-turing/1»).
+ * Lanza un Error con mensaje claro si algo no cuadra.
+ */
 export function importarJSON(texto) {
   let obj;
-  try { obj = JSON.parse(texto); } catch { throw new Error('El archivo no es un JSON válido.'); }
-  if (!obj || typeof obj !== 'object' || !Array.isArray(obj.reglas)) {
-    throw new Error('El JSON no tiene una lista «reglas».');
+  try { obj = JSON.parse(texto); } catch { throw new Error(tm('json.noValido')); }
+  return validarObjetoMaquina(obj);
+}
+
+/** Revisa un objeto ya leído (de un archivo, un enlace o la memoria del navegador). */
+export function validarObjetoMaquina(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || !Array.isArray(obj.reglas)) {
+    throw new Error(tm('json.sinReglas'));
   }
+  if (obj.formato !== undefined && obj.formato !== 'maquina-de-turing/1') throw new Error(tm('json.formato', { f: String(obj.formato) }));
+  if (obj.reglas.length > MAX_REGLAS) throw new Error(tm('json.grande', { max: MAX_REGLAS }));
+  const esTexto = (v) => v === undefined || typeof v === 'string' || typeof v === 'number';
+  for (const campo of ['nombre', 'descripcion', 'blanco', 'inicial', 'entrada']) {
+    if (!esTexto(obj[campo])) throw new Error(tm('json.texto', { campo }));
+  }
+  for (const campo of ['finales', 'acepta', 'rechaza']) {
+    const v = obj[campo];
+    if (v !== undefined && typeof v !== 'string' && !(Array.isArray(v) && v.every((x) => typeof x === 'string'))) {
+      throw new Error(tm('json.lista', { campo }));
+    }
+  }
+  obj.reglas.forEach((r, i) => {
+    const campos = Array.isArray(r) ? r : (r && typeof r === 'object' ? [r.estado, r.lee, r.escribe, r.mueve, r.nuevo] : null);
+    if (!campos || campos.length !== 5 || !campos.every((x) => typeof x === 'string' || typeof x === 'number')) {
+      throw new Error(tm('json.regla', { n: i + 1 }));
+    }
+  });
   return crearDefinicion(obj);
 }
