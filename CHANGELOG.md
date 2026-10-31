@@ -1,5 +1,22 @@
 # Cambios
 
+## v1.1.0 · 2026-10-30
+
+- Compartir: la máquina va dentro del enlace (`#/simulador?m=…`) y se abre al entrar. Botón **Compartir** en el simulador y el editor; en el teléfono usa el menú de compartir. Un enlace dañado muestra un aviso y abre el ejemplo principal.
+- Máquinas guardadas: guarda varias con nombre en el dispositivo, ábrelas o bórralas. Exportar a `.json` e importar con validación del esquema.
+- 3 ejemplos nuevos: copiar una cadena, paridad y doblar un binario (11 en total).
+- Sección **Ejercicios**: 5 retos con objetivo, casos que se comprueban solos con límite de pasos, pistas en orden y solución.
+- Modo oscuro: sigue al sistema, con botón para cambiarlo. 2D y 3D adaptados; sin errores graves de accesibilidad en los dos temas.
+- Inglés: interfaz, teoría, ejemplos y mensajes del motor en español e inglés (en inglés los movimientos son L/R/S). README en inglés.
+- Pruebas nuevas: enlaces, importación, ejercicios, máquinas guardadas y paridad de traducciones.
+
+## v1.1.0 · 2026-10-30 (English)
+
+- Share links carry the machine; Share button (system share sheet on phones); broken links show a notice.
+- Saved machines library, JSON export and validated import.
+- 3 new examples (copy, parity, binary double) and an Exercises section with auto-checked tests, hints and solutions.
+- Dark mode (system + toggle) for 2D and 3D; English UI and theory texts.
+
 ## v1.0.1 · 2026-10-30
 
 - Móvil: el menú superior se muestra en dos filas y ya no se desplaza de lado.
