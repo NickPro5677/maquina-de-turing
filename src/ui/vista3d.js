@@ -17,13 +17,16 @@ const suave = (t) => t * t * (3 - 2 * t);
 const tramo = (p, a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
 
 export class Vista3D {
-  constructor(contenedor) {
+  constructor(contenedor, { sin3d = 'Este dispositivo no puede mostrar gráficos 3D. Usa la vista 2D.' } = {}) {
     this.el = contenedor;
     this.ok = false;
     try {
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     } catch (e) {
-      this.el.innerHTML = '<p class="sin-3d">Este dispositivo no puede mostrar gráficos 3D. Usa la vista 2D.</p>';
+      const p = document.createElement('p');
+      p.className = 'sin-3d';
+      p.textContent = sin3d;
+      this.el.replaceChildren(p);
       return;
     }
     this.ok = true;
@@ -64,6 +67,16 @@ export class Vista3D {
     this.redimensionar();
   }
 
+  /** Colores del fondo y de la base según el tema (claro u oscuro). */
+  ponerTema(oscuro) {
+    if (!this.ok) return;
+    const fondo = oscuro ? 0x1c1c1e : FONDO;
+    this.escena.background.set(fondo);
+    this.escena.fog.color.set(fondo);
+    this.metal?.color.set(oscuro ? 0x636366 : 0xd8d8de);
+    this.pedirDibujo();
+  }
+
   crearLuces() {
     this.escena.add(new THREE.HemisphereLight(0xffffff, 0xdcdce4, 1.6));
     const sol = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -83,6 +96,7 @@ export class Vista3D {
     this.escena.add(suelo);
 
     const metal = new THREE.MeshStandardMaterial({ color: 0xd8d8de, roughness: 0.45, metalness: 0.3 });
+    this.metal = metal;
     const riel = new THREE.Mesh(new THREE.BoxGeometry(60, 0.14, 1.3), metal);
     riel.position.y = -0.2;
     riel.receiveShadow = true;

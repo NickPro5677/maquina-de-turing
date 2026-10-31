@@ -1,31 +1,40 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-tema="claro">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Máquina de Turing · simulador 2D y 3D</title>
-  <meta name="description" content="Simulador interactivo de la máquina de Turing en español, con vista 2D y 3D, ejemplos, editor de reglas y explicación. Funciona sin internet.">
+  <meta name="description" content="Simulador interactivo de la máquina de Turing en español e inglés, con vista 2D y 3D, ejemplos, ejercicios, editor de reglas y explicación. Funciona sin internet.">
   <meta name="theme-color" content="#f5f5f7">
+  <meta name="color-scheme" content="light dark">
+  <script>(function(){try{var g=function(k){return JSON.parse(localStorage.getItem('maquina-turing:'+k)||'null')};var t=g('tema');var o=t==='oscuro'||(t!=='claro'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.tema=o?'oscuro':'claro';if(g('idioma')==='en')document.documentElement.lang='en';}catch(e){}})();</script>
   <link rel="icon" href="icons/icono.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icono-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
-  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <a class="saltar" href="#contenido" data-i18n="saltar">Saltar al contenido</a>
 
-  <header class="barra" role="banner">
-    <a class="marca" href="#/inicio" aria-label="Máquina de Turing, inicio">
-      <span class="marca-icono" aria-hidden="true">▲</span>
-      <span>Máquina de Turing</span>
-    </a>
-    <nav class="menu" aria-label="Secciones">
-      <a href="#/inicio" data-ruta="inicio">Inicio</a>
-      <a href="#/simulador" data-ruta="simulador">Simulador</a>
-      <a href="#/ejemplos" data-ruta="ejemplos">Ejemplos</a>
-      <a href="#/editor" data-ruta="editor">Editor</a>
-      <a href="#/aprende" data-ruta="aprende">Aprende</a>
-      <a href="#/presentacion" data-ruta="presentacion">Presentación</a>
+  <header class="barra">
+    <div class="barra-fila">
+      <a class="marca" href="#/inicio" data-i18n-aria="marca.aria" aria-label="Máquina de Turing, inicio">
+        <span class="marca-icono" aria-hidden="true">▲</span>
+        <span data-i18n="app">Máquina de Turing</span>
+      </a>
+      <div class="ajustes">
+        <button class="ajuste" id="b-idioma" type="button" lang="en" aria-label="EN: switch to English">EN</button>
+        <button class="ajuste" id="b-tema" type="button" aria-pressed="false" data-i18n-aria="tema.aria" aria-label="Modo oscuro"><span aria-hidden="true" id="tema-icono">☾</span></button>
+      </div>
+    </div>
+    <nav class="menu" data-i18n-aria="menu.aria" aria-label="Secciones">
+      <a href="#/inicio" data-ruta="inicio" data-i18n="ruta.inicio">Inicio</a>
+      <a href="#/simulador" data-ruta="simulador" data-i18n="ruta.simulador">Simulador</a>
+      <a href="#/ejemplos" data-ruta="ejemplos" data-i18n="ruta.ejemplos">Ejemplos</a>
+      <a href="#/ejercicios" data-ruta="ejercicios" data-i18n="ruta.ejercicios">Ejercicios</a>
+      <a href="#/editor" data-ruta="editor" data-i18n="ruta.editor">Editor</a>
+      <a href="#/aprende" data-ruta="aprende" data-i18n="ruta.aprende">Aprende</a>
+      <a href="#/presentacion" data-ruta="presentacion" data-i18n="ruta.presentacion">Presentación</a>
     </nav>
   </header>
 
@@ -33,12 +42,13 @@
     <!-- 1. INICIO -->
     <section class="vista" data-vista="inicio" aria-labelledby="t-inicio">
       <div class="heroe">
-        <p class="antetitulo">Simulador interactivo · 2D y 3D</p>
-        <h1 id="t-inicio">Máquina de Turing</h1>
-        <p class="entradilla">Una cinta, un cabezal y una tabla de reglas: el modelo más simple de computadora, que explica qué se puede calcular y qué no.</p>
+        <p class="antetitulo" data-i18n="inicio.ante">Simulador interactivo · 2D y 3D</p>
+        <h1 id="t-inicio" data-i18n="app">Máquina de Turing</h1>
+        <p class="entradilla" data-i18n="inicio.entradilla">Una cinta, un cabezal y una tabla de reglas: el modelo más simple de computadora, que explica qué se puede calcular y qué no.</p>
         <div class="acciones">
-          <a class="boton primario grande" href="#/simulador">Probar la máquina</a>
-          <a class="boton secundario grande" href="#/aprende">Aprender</a>
+          <a class="boton primario grande" href="#/simulador" data-i18n="inicio.probar">Probar la máquina</a>
+          <a class="boton secundario grande" href="#/ejercicios" data-i18n="inicio.ejercicios">Hacer ejercicios</a>
+          <a class="boton secundario grande" href="#/aprende" data-i18n="inicio.aprender">Aprender</a>
         </div>
         <div class="cinta-muestra" aria-hidden="true">
           <span>_</span><span class="activa">1</span><span>1</span><span>1</span><span>_</span>
@@ -47,16 +57,16 @@
       </div>
       <div class="rejilla-3">
         <article class="tarjeta">
-          <h2>Mírala trabajar</h2>
-          <p>Vista 2D con la cinta, el cabezal y la regla activa, y una vista 3D de una máquina física que lee, escribe y mueve la cinta.</p>
+          <h2 data-i18n="inicio.c1t">Mírala trabajar</h2>
+          <p data-i18n="inicio.c1">Vista 2D con la cinta, el cabezal y la regla activa, y una vista 3D de una máquina física que lee, escribe y mueve la cinta.</p>
         </article>
         <article class="tarjeta">
-          <h2>Ocho ejemplos</h2>
-          <p>Sumar 1 en unario, invertir bits, sumar, incrementar en binario, palíndromos y los castores atareados.</p>
+          <h2 data-i18n="inicio.c2t">Ejemplos y ejercicios</h2>
+          <p data-i18n="inicio.c2">Once ejemplos listos y ejercicios guiados que comprueban tu máquina con casos de prueba.</p>
         </article>
         <article class="tarjeta">
-          <h2>Crea la tuya</h2>
-          <p>Escribe tus propias reglas, valídalas al instante, guárdalas y compártelas con un enlace.</p>
+          <h2 data-i18n="inicio.c3t">Crea la tuya</h2>
+          <p data-i18n="inicio.c3">Escribe tus propias reglas, valídalas al instante, guárdalas en el dispositivo y compártelas con un enlace.</p>
         </article>
       </div>
     </section>
@@ -65,24 +75,24 @@
     <section class="vista" data-vista="simulador" aria-labelledby="t-sim">
       <div class="sim-cabecera">
         <div>
-          <h1 id="t-sim" class="titulo-sim">Simulador</h1>
+          <h1 id="t-sim" class="titulo-sim" data-i18n="ruta.simulador">Simulador</h1>
           <p id="sim-descripcion" class="texto-2"></p>
         </div>
         <form id="form-entrada" class="form-entrada" autocomplete="off">
           <label class="campo">
-            <span>Ejemplo</span>
-            <select id="sel-ejemplo" aria-label="Elegir ejemplo"></select>
+            <span data-i18n="sim.ejemplo">Ejemplo</span>
+            <select id="sel-ejemplo"></select>
           </label>
           <label class="campo">
-            <span>Cinta de entrada</span>
+            <span data-i18n="sim.cinta">Cinta de entrada</span>
             <input id="in-cinta" type="text" inputmode="text" spellcheck="false" aria-describedby="ayuda-cinta">
           </label>
-          <button class="boton secundario" type="submit">Cargar</button>
+          <button class="boton secundario" type="submit" data-i18n="sim.cargar">Cargar</button>
         </form>
       </div>
-      <p id="ayuda-cinta" class="ayuda">Escribe los símbolos seguidos (por ejemplo 111). El guion bajo _ es una casilla en blanco.</p>
+      <p id="ayuda-cinta" class="ayuda" data-i18n="sim.ayuda">Escribe los símbolos seguidos (por ejemplo 111). El guion bajo _ es una casilla en blanco.</p>
 
-      <div class="pestanas" role="tablist" aria-label="Vista">
+      <div class="pestanas" role="tablist" data-i18n-aria="sim.vista" aria-label="Vista">
         <button role="tab" id="tab-2d" aria-selected="true" aria-controls="panel-2d">2D</button>
         <button role="tab" id="tab-3d" aria-selected="false" aria-controls="panel-3d">3D</button>
       </div>
@@ -90,52 +100,53 @@
       <div class="sim-vistas" data-pestana="2d">
         <div class="tarjeta panel-2d" id="panel-2d" role="tabpanel" aria-labelledby="tab-2d">
           <div class="indicadores">
-            <div class="indicador"><span>Estado</span><strong id="ind-estado">q0</strong></div>
-            <div class="indicador"><span>Paso</span><strong id="ind-pasos">0</strong></div>
-            <div class="indicador"><span>Lee</span><strong id="ind-lee">1</strong></div>
+            <div class="indicador"><span data-i18n="sim.estado">Estado</span><strong id="ind-estado">q0</strong></div>
+            <div class="indicador"><span data-i18n="sim.paso">Paso</span><strong id="ind-pasos">0</strong></div>
+            <div class="indicador"><span data-i18n="sim.lee">Lee</span><strong id="ind-lee">1</strong></div>
           </div>
-          <div id="cinta-2d" class="cinta-2d" aria-label="Cinta"></div>
+          <div id="cinta-2d" class="cinta-2d" data-i18n-aria="sim.cintaAria" aria-label="Cinta"></div>
           <p id="sim-mensaje" class="mensaje" role="status" aria-live="polite"></p>
         </div>
         <div class="tarjeta panel-3d" id="panel-3d" role="tabpanel" aria-labelledby="tab-3d">
-          <div id="lienzo-3d" class="lienzo-3d" role="img" aria-label="Vista 3D de la máquina: cinta, cabezal y brazo"></div>
-          <p class="pista">Arrastra para girar · pellizca o usa la rueda para acercar</p>
+          <div id="lienzo-3d" class="lienzo-3d" role="img" data-i18n-aria="sim.aria3d" aria-label="Vista 3D de la máquina: cinta, cabezal y brazo"></div>
+          <p class="pista" data-i18n="sim.pista3d">Arrastra para girar · pellizca o usa la rueda para acercar</p>
         </div>
       </div>
 
-      <div class="tarjeta controles" role="group" aria-label="Controles">
+      <div class="tarjeta controles" role="group" data-i18n-aria="sim.controles" aria-label="Controles">
         <div class="botones">
-          <button class="boton secundario" id="b-atras" aria-label="Paso atrás" title="Paso atrás (←)">◀︎ Paso atrás</button>
-          <button class="boton primario" id="b-paso" aria-label="Dar un paso" title="Paso (→)">Paso ▶︎</button>
-          <button class="boton primario" id="b-ejecutar" title="Ejecutar (espacio)">Ejecutar</button>
-          <button class="boton secundario" id="b-pausa" title="Pausa (espacio)">Pausa</button>
-          <button class="boton secundario" id="b-reiniciar" title="Reiniciar (R)">Reiniciar</button>
+          <button class="boton secundario" id="b-atras" data-i18n="sim.atras" data-i18n-title="sim.atrasT" title="Paso atrás (←)">◀︎ Paso atrás</button>
+          <button class="boton primario" id="b-paso" data-i18n="sim.pasoB" data-i18n-title="sim.pasoT" title="Paso (→)">Paso ▶︎</button>
+          <button class="boton primario" id="b-ejecutar" data-i18n="sim.ejecutar" data-i18n-title="sim.ejecutarT" title="Ejecutar (espacio)">Ejecutar</button>
+          <button class="boton secundario" id="b-pausa" data-i18n="sim.pausa" data-i18n-title="sim.pausaT" title="Pausa (espacio)">Pausa</button>
+          <button class="boton secundario" id="b-reiniciar" data-i18n="sim.reiniciar" data-i18n-title="sim.reiniciarT" title="Reiniciar (R)">Reiniciar</button>
+          <button class="boton secundario" id="b-compartir" data-i18n="sim.compartir">Compartir</button>
         </div>
         <label class="velocidad">
-          <span>Velocidad</span>
-          <input id="in-velocidad" type="range" min="1" max="10" value="4" aria-valuetext="4 de 10">
+          <span data-i18n="sim.velocidad">Velocidad</span>
+          <input id="in-velocidad" type="range" min="1" max="10" value="4">
           <output id="out-velocidad">4</output>
         </label>
       </div>
 
       <div class="sim-tablas">
         <div class="tarjeta">
-          <h2>Tabla de transiciones</h2>
-          <p class="texto-2 pequeno">Se resalta la regla que se aplicará en el próximo paso.</p>
-          <div class="tabla-envoltura" tabindex="0" role="region" aria-label="Tabla de transiciones">
+          <h2 data-i18n="sim.tabla">Tabla de transiciones</h2>
+          <p class="texto-2 pequeno" data-i18n="sim.tablaAyuda">Se resalta la regla que se aplicará en el próximo paso.</p>
+          <div class="tabla-envoltura" tabindex="0" role="region" data-i18n-aria="sim.tabla" aria-label="Tabla de transiciones">
             <table class="tabla" id="tabla-reglas">
-              <thead><tr><th scope="col">Estado</th><th scope="col">Lee</th><th scope="col">Escribe</th><th scope="col">Mueve</th><th scope="col">Nuevo estado</th></tr></thead>
+              <thead><tr><th scope="col" data-i18n="col.estado">Estado</th><th scope="col" data-i18n="col.lee">Lee</th><th scope="col" data-i18n="col.escribe">Escribe</th><th scope="col" data-i18n="col.mueve">Mueve</th><th scope="col" data-i18n="col.nuevo">Nuevo estado</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
-          <p class="texto-2 pequeno">Mueve: I = izquierda, D = derecha, N = no se mueve. Paradas: <span id="txt-paradas"></span></p>
+          <p class="texto-2 pequeno"><span data-i18n="sim.leyenda">Mueve: I = izquierda, D = derecha, N = no se mueve.</span> <span data-i18n="sim.paradas">Paradas:</span> <span id="txt-paradas"></span></p>
         </div>
         <div class="tarjeta">
-          <h2>Traza paso a paso</h2>
-          <p class="texto-2 pequeno">El cabezal está en [ ].</p>
-          <div class="tabla-envoltura traza" tabindex="0" role="region" aria-label="Traza paso a paso">
+          <h2 data-i18n="sim.traza">Traza paso a paso</h2>
+          <p class="texto-2 pequeno" data-i18n="sim.trazaAyuda">El cabezal está en [ ].</p>
+          <div class="tabla-envoltura traza" tabindex="0" role="region" data-i18n-aria="sim.traza" aria-label="Traza paso a paso">
             <table class="tabla" id="tabla-traza">
-              <thead><tr><th scope="col">Paso</th><th scope="col">Cinta</th><th scope="col">Estado</th><th scope="col">Regla aplicada</th></tr></thead>
+              <thead><tr><th scope="col" data-i18n="sim.paso">Paso</th><th scope="col" data-i18n="col.cinta">Cinta</th><th scope="col" data-i18n="col.estado">Estado</th><th scope="col" data-i18n="col.regla">Regla aplicada</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -143,64 +154,75 @@
       </div>
     </section>
 
-    <!-- 4. EJEMPLOS -->
+    <!-- 3. EJEMPLOS -->
     <section class="vista" data-vista="ejemplos" aria-labelledby="t-ej">
-      <h1 id="t-ej">Ejemplos precargados</h1>
-      <p class="entradilla">Cada ejemplo abre el simulador con sus reglas y su cinta. Puedes cambiar la entrada o editarlo.</p>
+      <h1 id="t-ej" data-i18n="ej.titulo">Ejemplos precargados</h1>
+      <p class="entradilla" data-i18n="ej.entradilla">Cada ejemplo abre el simulador con sus reglas y su cinta. Puedes cambiar la entrada o editarlo.</p>
       <div id="lista-ejemplos" class="rejilla-ejemplos"></div>
+    </section>
+
+    <!-- 4. EJERCICIOS -->
+    <section class="vista" data-vista="ejercicios" aria-labelledby="t-ejr">
+      <h1 id="t-ejr" data-i18n="ejr.titulo">Ejercicios</h1>
+      <p class="entradilla" data-i18n="ejr.entradilla">Construye la máquina en el editor y pulsa «Comprobar»: se prueba sola con varios casos. Si te atascas, abre las pistas antes de mirar la solución.</p>
+      <div id="lista-ejercicios" class="rejilla-ejemplos"></div>
     </section>
 
     <!-- 5. EDITOR -->
     <section class="vista" data-vista="editor" aria-labelledby="t-ed">
-      <h1 id="t-ed">Editor de reglas</h1>
-      <p class="entradilla">Crea tu propia máquina. Se guarda sola en este dispositivo.</p>
+      <h1 id="t-ed" data-i18n="ed.titulo">Editor de reglas</h1>
+      <p class="entradilla" data-i18n="ed.entradilla">Crea tu propia máquina. El borrador se guarda solo en este dispositivo.</p>
+      <p id="ed-ejercicio" class="ejercicio-activo" hidden></p>
       <div class="tarjeta">
         <div class="editor-datos">
-          <label class="campo"><span>Nombre</span><input id="ed-nombre" type="text"></label>
-          <label class="campo"><span>Cinta de entrada</span><input id="ed-entrada" type="text" spellcheck="false"></label>
-          <label class="campo"><span>Estado inicial</span><input id="ed-inicial" type="text" spellcheck="false"></label>
-          <label class="campo"><span>Estados finales (separados por coma)</span><input id="ed-finales" type="text" spellcheck="false"></label>
-          <label class="campo"><span>Estados de aceptación</span><input id="ed-acepta" type="text" spellcheck="false" placeholder="opcional"></label>
-          <label class="campo"><span>Estados de rechazo</span><input id="ed-rechaza" type="text" spellcheck="false" placeholder="opcional"></label>
+          <label class="campo"><span data-i18n="ed.nombre">Nombre</span><input id="ed-nombre" type="text"></label>
+          <label class="campo"><span data-i18n="sim.cinta">Cinta de entrada</span><input id="ed-entrada" type="text" spellcheck="false"></label>
+          <label class="campo"><span data-i18n="ed.inicial">Estado inicial</span><input id="ed-inicial" type="text" spellcheck="false"></label>
+          <label class="campo"><span data-i18n="ed.finales">Estados finales (separados por coma)</span><input id="ed-finales" type="text" spellcheck="false"></label>
+          <label class="campo"><span data-i18n="ed.acepta">Estados de aceptación</span><input id="ed-acepta" type="text" spellcheck="false" data-i18n-ph="ed.opcional" placeholder="opcional"></label>
+          <label class="campo"><span data-i18n="ed.rechaza">Estados de rechazo</span><input id="ed-rechaza" type="text" spellcheck="false" data-i18n-ph="ed.opcional" placeholder="opcional"></label>
         </div>
         <div class="tabla-envoltura tabla-editor-envoltura">
           <table class="tabla tabla-editor" id="tabla-editor">
-            <thead><tr><th scope="col">#</th><th scope="col">Estado</th><th scope="col">Lee</th><th scope="col">Escribe</th><th scope="col">Mueve</th><th scope="col">Nuevo estado</th><th scope="col"><span class="oculto">Borrar</span></th></tr></thead>
+            <thead><tr><th scope="col">#</th><th scope="col" data-i18n="col.estado">Estado</th><th scope="col" data-i18n="col.lee">Lee</th><th scope="col" data-i18n="col.escribe">Escribe</th><th scope="col" data-i18n="col.mueve">Mueve</th><th scope="col" data-i18n="col.nuevo">Nuevo estado</th><th scope="col"><span class="oculto" data-i18n="ed.borrar">Borrar</span></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
         <div class="botones">
-          <button class="boton secundario" id="ed-anadir">+ Añadir regla</button>
-          <button class="boton primario" id="ed-probar">Probar en el simulador</button>
+          <button class="boton secundario" id="ed-anadir" data-i18n="ed.anadir">+ Añadir regla</button>
+          <button class="boton primario" id="ed-probar" data-i18n="ed.probar">Probar en el simulador</button>
         </div>
         <div id="ed-validacion" class="validacion" role="status" aria-live="polite"></div>
       </div>
       <div class="rejilla-2">
         <div class="tarjeta">
-          <h2>Guardar y compartir</h2>
+          <h2 data-i18n="ed.guardarT">Guardar y compartir</h2>
           <div class="botones">
-            <button class="boton secundario" id="ed-exportar">Exportar JSON</button>
-            <label class="boton secundario" for="ed-archivo">Importar JSON</label>
-            <input id="ed-archivo" class="oculto" type="file" accept="application/json,.json">
-            <button class="boton secundario" id="ed-compartir">Compartir enlace</button>
+            <button class="boton primario" id="ed-guardar" data-i18n="ed.guardar">Guardar en este dispositivo</button>
+            <button class="boton secundario" id="ed-compartir" data-i18n="ed.compartir">Compartir enlace</button>
+            <button class="boton secundario" id="ed-exportar" data-i18n="ed.exportar">Exportar JSON</button>
+            <label class="boton secundario" for="ed-archivo" data-i18n="ed.importar">Importar JSON</label>
+            <input id="ed-archivo" class="oculto" type="file" accept="application/json,.json" data-i18n-aria="ed.importar" aria-label="Importar JSON">
           </div>
           <p id="ed-aviso" class="texto-2 pequeno" role="status" aria-live="polite"></p>
-          <label class="campo"><span>Empezar desde un ejemplo</span><select id="ed-ejemplo"></select></label>
+          <h3 data-i18n="ed.guardadas">Mis máquinas guardadas</h3>
+          <ul id="ed-guardadas" class="guardadas"></ul>
+          <label class="campo"><span data-i18n="ed.desdeEjemplo">Empezar desde un ejemplo</span><select id="ed-ejemplo"></select></label>
         </div>
         <div class="tarjeta">
-          <h2>Reglas como texto</h2>
-          <p class="texto-2 pequeno">Una regla por línea: <code>estado, lee -&gt; escribe, mueve, nuevo</code></p>
-          <textarea id="ed-texto" rows="6" spellcheck="false" aria-label="Reglas como texto"></textarea>
-          <div class="botones"><button class="boton secundario" id="ed-aplicar-texto">Aplicar texto</button></div>
+          <h2 data-i18n="ed.textoT">Reglas como texto</h2>
+          <p class="texto-2 pequeno"><span data-i18n="ed.textoAyuda">Una regla por línea:</span> <code data-i18n="ed.formato">estado, lee -&gt; escribe, mueve, nuevo</code></p>
+          <textarea id="ed-texto" rows="6" spellcheck="false" data-i18n-aria="ed.textoT" aria-label="Reglas como texto"></textarea>
+          <div class="botones"><button class="boton secundario" id="ed-aplicar-texto" data-i18n="ed.aplicar">Aplicar texto</button></div>
         </div>
       </div>
     </section>
 
     <!-- 6. APRENDE -->
     <section class="vista" data-vista="aprende" aria-labelledby="t-ap">
-      <h1 id="t-ap">Aprende</h1>
-      <p class="entradilla">Qué es la máquina de Turing, de dónde viene y por qué sigue siendo la base de la informática.</p>
-      <nav class="indice" aria-label="Temas" id="indice-aprende"></nav>
+      <h1 id="t-ap" data-i18n="ruta.aprende">Aprende</h1>
+      <p class="entradilla" data-i18n="ap.entradilla">Qué es la máquina de Turing, de dónde viene y por qué sigue siendo la base de la informática.</p>
+      <nav class="indice" data-i18n-aria="ap.temas" aria-label="Temas" id="indice-aprende"></nav>
       <div id="contenido-aprende"></div>
     </section>
 
@@ -208,34 +230,36 @@
     <section class="vista vista-presentacion" data-vista="presentacion" aria-labelledby="t-pr">
       <div class="pr-cabecera">
         <div>
-          <p class="antetitulo">Máquina de Turing</p>
-          <h1 id="t-pr">Sumar 1 en unario: 111 → 1111</h1>
+          <p class="antetitulo" data-i18n="app">Máquina de Turing</p>
+          <h1 id="t-pr" data-i18n="pr.titulo">Sumar 1 en unario: 111 → 1111</h1>
         </div>
         <div class="botones">
-          <button class="boton secundario" id="pr-pantalla">Pantalla completa</button>
-          <a class="boton secundario" href="#/simulador">Salir</a>
+          <button class="boton secundario" id="pr-pantalla" data-i18n="pr.pantalla">Pantalla completa</button>
+          <a class="boton secundario" href="#/simulador" data-i18n="pr.salir">Salir</a>
         </div>
       </div>
-      <div id="pr-cinta" class="cinta-2d grande" aria-label="Cinta"></div>
+      <div id="pr-cinta" class="cinta-2d grande" data-i18n-aria="sim.cintaAria" aria-label="Cinta"></div>
       <div class="pr-datos">
-        <div class="indicador"><span>Paso</span><strong id="pr-pasos">0</strong></div>
-        <div class="indicador"><span>Estado</span><strong id="pr-estado">q0</strong></div>
-        <div class="indicador ancho"><span>Regla</span><strong id="pr-regla"></strong></div>
+        <div class="indicador"><span data-i18n="sim.paso">Paso</span><strong id="pr-pasos">0</strong></div>
+        <div class="indicador"><span data-i18n="sim.estado">Estado</span><strong id="pr-estado">q0</strong></div>
+        <div class="indicador ancho"><span data-i18n="pr.regla">Regla</span><strong id="pr-regla"></strong></div>
       </div>
       <div class="pr-pie">
-        <table class="tabla" id="pr-tabla"><thead><tr><th>Estado</th><th>Lee</th><th>Escribe</th><th>Mueve</th><th>Nuevo</th></tr></thead><tbody></tbody></table>
+        <table class="tabla" id="pr-tabla"><thead><tr><th scope="col" data-i18n="col.estado">Estado</th><th scope="col" data-i18n="col.lee">Lee</th><th scope="col" data-i18n="col.escribe">Escribe</th><th scope="col" data-i18n="col.mueve">Mueve</th><th scope="col" data-i18n="pr.nuevo">Nuevo</th></tr></thead><tbody></tbody></table>
         <div class="botones">
-          <button class="boton secundario" id="pr-atras" aria-label="Paso atrás">◀︎</button>
-          <button class="boton primario" id="pr-paso" aria-label="Paso">Paso ▶︎</button>
-          <button class="boton secundario" id="pr-reiniciar">Reiniciar</button>
+          <button class="boton secundario" id="pr-atras" data-i18n-aria="sim.atrasA" aria-label="Paso atrás">◀︎</button>
+          <button class="boton primario" id="pr-paso" data-i18n="sim.pasoB">Paso ▶︎</button>
+          <button class="boton secundario" id="pr-reiniciar" data-i18n="sim.reiniciar">Reiniciar</button>
         </div>
-        <p class="pista">→ / Av Pág / espacio: paso · ← / Re Pág: atrás · R: reiniciar · F: pantalla completa</p>
+        <p class="pista" data-i18n="pr.pista">→ / Av Pág / espacio: paso · ← / Re Pág: atrás · R: reiniciar · F: pantalla completa</p>
       </div>
     </section>
   </main>
 
+  <div id="aviso-global" class="aviso-global" role="status" aria-live="polite"></div>
+
   <footer class="pie">
-    <p>Máquina de Turing · simulador libre (licencia MIT) · funciona sin internet</p>
+    <p data-i18n="pie">Máquina de Turing · simulador libre (licencia MIT) · funciona sin internet</p>
   </footer>
 
   <script type="module" src="src/app.js"></script>

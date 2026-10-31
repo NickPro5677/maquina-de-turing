@@ -4,34 +4,56 @@
 import {
   MaquinaTuring, crearDefinicion, validar, describirRegla, textoParada, cintaTraza,
   estadosDeParada, exportarJSON, importarJSON, parsearReglas, reglasATexto, EJEMPLOS, buscarEjemplo,
+  textoEjemplo, ponerIdiomaMotor, tm, letraMov, enlaceMaquina, decodificarMaquina,
+  EJERCICIOS, buscarEjercicio, solucionEjercicio, comprobarEjercicio,
+  leerBiblioteca, guardarEnBiblioteca, borrarDeBiblioteca, buscarEnBiblioteca, serializarBiblioteca,
 } from './motor/index.js';
 import { Vista2D, escapar } from './ui/vista2d.js';
 import { Vista3D } from './ui/vista3d.js';
 import { TEMAS, LINEA_TIEMPO, REFERENCIAS } from './ui/aprende.js';
+import { TEMAS_EN, LINEA_TIEMPO_EN } from './ui/aprende.en.js';
+import { t, idioma, ponerIdioma, traducirPagina } from './i18n/index.js';
 
 const $ = (s) => document.querySelector(s);
 const CLAVE_EDITOR = 'maquina-turing:editor';
 const CLAVE_VELOCIDAD = 'maquina-turing:velocidad';
+const CLAVE_TEMA = 'maquina-turing:tema';
+const CLAVE_IDIOMA = 'maquina-turing:idioma';
+const CLAVE_GUARDADAS = 'maquina-turing:guardadas';
+const CLAVE_EJERCICIOS = 'maquina-turing:ejercicios';
 const RETARDOS = [1400, 1100, 850, 650, 480, 340, 220, 120, 50, 0]; // ms por paso, velocidad 1..10
-const MOV = { I: 'I', D: 'D', N: 'N' };
 
 /* ---------- utilidades ---------- */
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* modo privado */ } };
 const cargar = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
-function codificar(def) {
-  const bytes = new TextEncoder().encode(exportarJSON(def));
-  let bin = '';
-  bytes.forEach((b) => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+let avisoTemporizador = 0;
+/** Mensaje breve abajo de la pantalla (lo leen también los lectores de pantalla). */
+function avisoGlobal(texto) {
+  const el = $('#aviso-global');
+  el.textContent = texto;
+  el.classList.add('visible');
+  clearTimeout(avisoTemporizador);
+  avisoTemporizador = setTimeout(() => el.classList.remove('visible'), 5000);
 }
-function decodificar(txt) {
-  const bin = atob(txt.replace(/-/g, '+').replace(/_/g, '/'));
-  return importarJSON(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
+
+/** Comparte un enlace: menú del sistema en el teléfono; si no, lo copia. */
+async function compartirEnlace(url, nombre) {
+  const titulo = t('comp.titulo', { n: nombre });
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try { await navigator.share({ title: titulo, url }); return; } catch (e) { if (e?.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(url); avisoGlobal(t('comp.copiado')); } catch { prompt(t('comp.copia'), url); }
+}
+
+/** Nombre visible de la máquina del simulador (los ejemplos se traducen). */
+function nombreEjemplo(id, def) {
+  const ej = id && buscarEjemplo(id);
+  return ej ? textoEjemplo(ej, idioma()).nombre : def.nombre;
 }
 
 function filaReglas(reglas, activa) {
-  return reglas.map((r) => `<tr class="${r === activa ? 'activa' : ''}"><td>${escapar(r.estado)}</td><td>${escapar(r.lee)}</td><td>${escapar(r.escribe)}</td><td>${MOV[r.mueve] ?? escapar(r.mueve)}</td><td>${escapar(r.nuevo)}</td></tr>`).join('');
+  return reglas.map((r) => `<tr class="${r === activa ? 'activa' : ''}"><td>${escapar(r.estado)}</td><td>${escapar(r.lee)}</td><td>${escapar(r.escribe)}</td><td>${escapar(letraMov(r.mueve) ?? r.mueve)}</td><td>${escapar(r.nuevo)}</td></tr>`).join('');
 }
 
 function textoRegla(m) {
@@ -55,8 +77,7 @@ const sim = {
 function iniciarSimulador() {
   sim.vista2d = new Vista2D($('#cinta-2d'));
   const sel = $('#sel-ejemplo');
-  sel.innerHTML = EJEMPLOS.map((e) => `<option value="${e.id}">${escapar(e.nombre)}</option>`).join('')
-    + '<option value="__propia">Mi máquina (editor)</option>';
+  llenarSelectEjemplos();
   sel.addEventListener('change', () => {
     if (sel.value === '__propia') cargarEnSimulador(definicionEditor(), '__propia');
     else cargarEnSimulador(crearDefinicion(buscarEjemplo(sel.value)), sel.value);
@@ -74,9 +95,12 @@ function iniciarSimulador() {
 
   const vel = $('#in-velocidad');
   vel.value = cargar(CLAVE_VELOCIDAD) ?? 4;
-  const mostrarVel = () => { $('#out-velocidad').textContent = vel.value; vel.setAttribute('aria-valuetext', `${vel.value} de 10`); };
-  mostrarVel();
-  vel.addEventListener('input', () => { mostrarVel(); guardar(CLAVE_VELOCIDAD, Number(vel.value)); });
+  mostrarVelocidad();
+  vel.addEventListener('input', () => { mostrarVelocidad(); guardar(CLAVE_VELOCIDAD, Number(vel.value)); });
+  $('#b-compartir').addEventListener('click', () => {
+    const def = { ...sim.def, nombre: nombreEjemplo(sim.idEjemplo, sim.def) };
+    compartirEnlace(enlaceMaquina(location.href, def), def.nombre);
+  });
 
   for (const id of ['2d', '3d']) {
     $(`#tab-${id}`).addEventListener('click', () => elegirPestana(id));
@@ -90,6 +114,20 @@ function iniciarSimulador() {
   });
 }
 
+function mostrarVelocidad() {
+  const vel = $('#in-velocidad');
+  $('#out-velocidad').textContent = vel.value;
+  vel.setAttribute('aria-valuetext', t('sim.velocidadTexto', { n: vel.value }));
+}
+
+function llenarSelectEjemplos() {
+  const sel = $('#sel-ejemplo');
+  const actual = sel.value;
+  sel.innerHTML = EJEMPLOS.map((e) => `<option value="${e.id}">${escapar(textoEjemplo(e, idioma()).nombre)}</option>`).join('')
+    + `<option value="__propia">${escapar(t('sim.propia'))}</option>`;
+  if (actual) sel.value = actual;
+}
+
 function elegirPestana(id) {
   $('.sim-vistas').dataset.pestana = id;
   $('#tab-2d').setAttribute('aria-selected', String(id === '2d'));
@@ -98,7 +136,10 @@ function elegirPestana(id) {
 }
 
 function asegurar3D() {
-  if (!sim.vista3d) sim.vista3d = new Vista3D($('#lienzo-3d'));
+  if (!sim.vista3d) {
+    sim.vista3d = new Vista3D($('#lienzo-3d'), { sin3d: t('sim.sin3d') });
+    sim.vista3d.ponerTema?.(document.documentElement.dataset.tema === 'oscuro');
+  }
   if (sim.m) sim.vista3d.mostrar(sim.m);
   sim.vista3d.redimensionar();
 }
@@ -109,11 +150,15 @@ function cargarEnSimulador(def, id = null) {
   pausar();
   sim.def = def;
   sim.idEjemplo = id;
-  $('#t-sim').textContent = def.nombre;
-  const ej = id && buscarEjemplo(id);
-  $('#sim-descripcion').textContent = ej ? ej.descripcion : (def.descripcion || 'Máquina creada en el editor.');
-  $('#sel-ejemplo').value = id && (ej || id === '__propia') ? id : '__propia';
+  $('#sel-ejemplo').value = id && (buscarEjemplo(id) || id === '__propia') ? id : '__propia';
+  textosSimulador();
   reiniciar();
+}
+
+function textosSimulador() {
+  const ej = sim.idEjemplo && buscarEjemplo(sim.idEjemplo);
+  $('#t-sim').textContent = nombreEjemplo(sim.idEjemplo, sim.def);
+  $('#sim-descripcion').textContent = ej ? textoEjemplo(ej, idioma()).descripcion : (sim.def.descripcion || t('sim.descPropia'));
 }
 
 function reiniciar() {
@@ -211,31 +256,31 @@ function actualizar(opciones) {
   $('#ind-lee').textContent = m.leer();
   const activa = m.reglaActual();
   $('#tabla-reglas tbody').innerHTML = filaReglas(sim.def.reglas, sim.invalida ? null : activa);
-  const paradas = [...sim.def.finales, ...sim.def.acepta.map((q) => `${q} (acepta)`), ...sim.def.rechaza.map((q) => `${q} (rechaza)`)];
-  $('#txt-paradas').textContent = paradas.join(', ') || 'ninguno';
+  const paradas = [...sim.def.finales, ...sim.def.acepta.map((q) => `${q} ${t('sim.sufAcepta')}`), ...sim.def.rechaza.map((q) => `${q} ${t('sim.sufRechaza')}`)];
+  $('#txt-paradas').textContent = paradas.join(', ') || t('sim.ninguno');
 
   const msg = $('#sim-mensaje');
   msg.className = 'mensaje';
   if (sim.invalida) {
-    msg.textContent = `La máquina tiene errores: ${sim.invalida[0].mensaje} Corrígela en el editor.`;
+    msg.textContent = t('sim.msgInvalida', { e: sim.invalida[0].mensaje });
     msg.classList.add('rechazo');
   } else if (m.motivo === 'final') {
-    msg.textContent = `✓ Terminó en ${m.estado} después de ${m.pasos} pasos. Resultado: ${m.resultado() || '(cinta vacía)'}`;
+    msg.textContent = t('sim.msgFinal', { q: m.estado, n: m.pasos, r: m.resultado() || t('sim.cintaVacia') });
     msg.classList.add('fin');
   } else if (m.motivo === 'acepta') {
-    msg.textContent = `✓ Acepta: la entrada «${m.entrada || 'vacía'}» es un palíndromo (${m.pasos} pasos).`;
+    msg.textContent = t('sim.msgAcepta', { e: m.entrada || t('sim.vacia'), q: m.estado, n: m.pasos });
     msg.classList.add('fin');
   } else if (m.motivo === 'rechaza') {
-    msg.textContent = `✕ Rechaza la entrada «${m.entrada}» (${m.pasos} pasos).`;
+    msg.textContent = t('sim.msgRechaza', { e: m.entrada || t('sim.vacia'), q: m.estado, n: m.pasos });
     msg.classList.add('rechazo');
   } else if (m.motivo === 'sin-regla') {
-    msg.textContent = `Se detuvo: no hay regla para el estado ${m.estado} leyendo «${m.leer()}».`;
+    msg.textContent = t('sim.msgSinRegla', { q: m.estado, s: m.leer() });
     msg.classList.add('alerta');
   } else if (m.motivo === 'limite') {
-    msg.textContent = `Se alcanzó el límite de ${m.limitePasos} pasos. Puede que esta máquina no pare nunca: en general no hay forma de saberlo (problema de la parada).`;
+    msg.textContent = t('sim.msgLimite', { n: m.limitePasos });
     msg.classList.add('alerta');
   } else {
-    msg.textContent = `Próximo paso: ${textoRegla(m)}`;
+    msg.textContent = t('sim.msgProximo', { r: textoRegla(m) });
   }
 
   const filas = sim.traza.slice(-200);
@@ -250,33 +295,41 @@ function actualizar(opciones) {
 }
 
 /* ---------- ejemplos ---------- */
-function iniciarEjemplos() {
-  $('#lista-ejemplos').innerHTML = EJEMPLOS.map((e) => `
+function dibujarEjemplos() {
+  $('#lista-ejemplos').innerHTML = EJEMPLOS.map((e) => {
+    const tx = textoEjemplo(e, idioma());
+    return `
     <article class="tarjeta ejemplo">
-      <h2>${escapar(e.nombre)}</h2>
-      <p>${escapar(e.resumen)}</p>
-      <div class="datos">Entrada: ${escapar(e.entrada || '(cinta vacía)')} · ${e.reglas.length} reglas</div>
+      <h2>${escapar(tx.nombre)}</h2>
+      <p>${escapar(tx.resumen)}</p>
+      <div class="datos">${escapar(t('ej.datos', { e: e.entrada || t('sim.cintaVacia'), n: e.reglas.length }))}</div>
       <div class="botones">
-        <a class="boton primario" href="#/simulador?ejemplo=${e.id}">Abrir en el simulador</a>
-        <button class="boton texto" data-editar="${e.id}">Editar</button>
+        <a class="boton primario" href="#/simulador?ejemplo=${e.id}">${escapar(t('ej.abrir'))}</a>
+        <button class="boton texto" data-editar="${e.id}" aria-label="${escapar(`${t('ej.editar')}: ${tx.nombre}`)}">${escapar(t('ej.editar'))}</button>
       </div>
-    </article>`).join('');
+    </article>`;
+  }).join('');
+}
+
+function iniciarEjemplos() {
+  dibujarEjemplos();
   $('#lista-ejemplos').addEventListener('click', (ev) => {
     const id = ev.target.closest('[data-editar]')?.dataset.editar;
     if (!id) return;
-    ponerEnEditor(crearDefinicion(buscarEjemplo(id)));
+    ponerEnEditor({ ...crearDefinicion(buscarEjemplo(id)), nombre: textoEjemplo(buscarEjemplo(id), idioma()).nombre });
     location.hash = '#/editor';
   });
 }
 
 /* ---------- editor ---------- */
-const ed = { def: null };
+const ed = { def: null, biblioteca: [], ejercicio: null };
 
 function definicionEditor() { return crearDefinicion(ed.def); }
 
 function iniciarEditor() {
   const guardada = cargar(CLAVE_EDITOR);
-  ed.def = guardada ? crearDefinicion(guardada) : crearDefinicion({ ...buscarEjemplo('sumar-uno'), nombre: 'Mi máquina' });
+  ed.def = guardada ? crearDefinicion(guardada) : crearDefinicion({ ...buscarEjemplo('sumar-uno'), nombre: t('ed.nuevoNombre') });
+  ed.biblioteca = leerBiblioteca(cargar(CLAVE_GUARDADAS));
   const campos = { '#ed-nombre': 'nombre', '#ed-entrada': 'entrada', '#ed-inicial': 'inicial', '#ed-finales': 'finales', '#ed-acepta': 'acepta', '#ed-rechaza': 'rechaza' };
   for (const [sel, clave] of Object.entries(campos)) {
     $(sel).addEventListener('input', (ev) => {
@@ -307,7 +360,7 @@ function iniciarEditor() {
   });
   $('#ed-probar').addEventListener('click', () => {
     const d = definicionEditor();
-    if (!validar(d).valido) { aviso('Corrige los errores marcados en rojo antes de probarla.'); return; }
+    if (!validar(d).valido) { aviso(t('ed.corrige')); return; }
     sim.pendiente = d;
     location.hash = '#/simulador?propia=1';
   });
@@ -318,34 +371,91 @@ function iniciarEditor() {
     a.download = `${(ed.def.nombre || 'maquina').normalize('NFD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'maquina'}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    aviso('Archivo JSON descargado.');
+    aviso(t('ed.descargado'));
   });
   $('#ed-archivo').addEventListener('change', async (ev) => {
     const f = ev.target.files[0];
     if (!f) return;
-    try { ponerEnEditor(importarJSON(await f.text())); aviso(`Importado: ${f.name}`); } catch (e) { aviso(e.message); }
+    try { ponerEnEditor(importarJSON(await f.text())); aviso(t('ed.importado', { n: f.name })); } catch (e) { aviso(`✕ ${e.message}`); }
     ev.target.value = '';
   });
-  $('#ed-compartir').addEventListener('click', async () => {
-    const url = `${location.href.split('#')[0]}#/simulador?m=${codificar(definicionEditor())}`;
-    try { await navigator.clipboard.writeText(url); aviso('Enlace copiado. Quien lo abra verá tu máquina en el simulador.'); } catch { prompt('Copia este enlace:', url); }
+  $('#ed-compartir').addEventListener('click', () => {
+    const d = definicionEditor();
+    compartirEnlace(enlaceMaquina(location.href, d), d.nombre);
+  });
+  $('#ed-guardar').addEventListener('click', () => {
+    const d = definicionEditor();
+    ed.biblioteca = guardarEnBiblioteca(ed.biblioteca, d);
+    guardarBiblioteca();
+    aviso(t('ed.guardada', { n: ed.biblioteca[0].nombre }));
+  });
+  $('#ed-guardadas').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-accion]');
+    if (!b) return;
+    const nombre = b.closest('li').dataset.nombre;
+    if (b.dataset.accion === 'abrir') {
+      const x = buscarEnBiblioteca(ed.biblioteca, nombre);
+      if (x) { ponerEnEditor(x.def); aviso(t('ed.abierta', { n: nombre })); }
+    } else {
+      ed.biblioteca = borrarDeBiblioteca(ed.biblioteca, nombre);
+      guardarBiblioteca();
+      aviso(t('ed.borrada', { n: nombre }));
+      $('#ed-guardar').focus();
+    }
   });
   const selEj = $('#ed-ejemplo');
-  selEj.innerHTML = '<option value="">Elige un ejemplo…</option>' + EJEMPLOS.map((e) => `<option value="${e.id}">${escapar(e.nombre)}</option>`).join('');
+  llenarSelectEditor();
   selEj.addEventListener('change', () => {
     if (!selEj.value) return;
-    ponerEnEditor(crearDefinicion(buscarEjemplo(selEj.value)));
-    aviso('Ejemplo copiado al editor. Tus cambios no modifican el original.');
+    const ej = buscarEjemplo(selEj.value);
+    ponerEnEditor({ ...crearDefinicion(ej), nombre: textoEjemplo(ej, idioma()).nombre });
+    aviso(t('ed.ejemploCopiado'));
     selEj.value = '';
+  });
+  $('#ed-ejercicio').addEventListener('click', (ev) => {
+    if (ev.target.closest('[data-comprobar]')) comprobarDesdeEditor();
   });
   $('#ed-aplicar-texto').addEventListener('click', () => {
     const { reglas, errores } = parsearReglas($('#ed-texto').value);
     if (errores.length) { aviso(errores.map((e) => e.mensaje).join(' ')); return; }
     ed.def.reglas = reglas;
     cambioEditor(true);
-    aviso(`${reglas.length} reglas aplicadas.`);
+    aviso(t('ed.aplicadas', { n: reglas.length }));
   });
   ponerEnEditor(ed.def);
+  dibujarBiblioteca();
+}
+
+function llenarSelectEditor() {
+  $('#ed-ejemplo').innerHTML = `<option value="">${escapar(t('ed.elige'))}</option>`
+    + EJEMPLOS.map((e) => `<option value="${e.id}">${escapar(textoEjemplo(e, idioma()).nombre)}</option>`).join('');
+}
+
+function guardarBiblioteca() {
+  guardar(CLAVE_GUARDADAS, serializarBiblioteca(ed.biblioteca));
+  dibujarBiblioteca();
+}
+
+function dibujarBiblioteca() {
+  const ul = $('#ed-guardadas');
+  if (!ed.biblioteca.length) { ul.innerHTML = `<li class="vacia">${escapar(t('ed.ninguna'))}</li>`; return; }
+  const fecha = new Intl.DateTimeFormat(idioma() === 'en' ? 'en' : 'es', { dateStyle: 'medium', timeStyle: 'short' });
+  ul.innerHTML = ed.biblioteca.map((x) => `
+    <li data-nombre="${escapar(x.nombre)}">
+      <div><strong>${escapar(x.nombre)}</strong><span>${escapar(t('ed.reglasN', { n: x.def.reglas.length }))}${x.fecha ? ` · ${escapar(fecha.format(x.fecha))}` : ''}</span></div>
+      <button class="boton secundario chico" data-accion="abrir" aria-label="${escapar(t('ed.cargarA', { n: x.nombre }))}">${escapar(t('ed.cargar'))}</button>
+      <button class="boton texto chico" data-accion="borrar" aria-label="${escapar(t('ed.borrarA', { n: x.nombre }))}">${escapar(t('ed.borrarG'))}</button>
+    </li>`).join('');
+}
+
+/** Antes de reemplazar el borrador (por un ejercicio o un enlace), lo guarda en la lista. */
+function respaldarBorrador() {
+  const d = definicionEditor();
+  if (!d.reglas.length) return;
+  const igual = buscarEnBiblioteca(ed.biblioteca, d.nombre);
+  if (igual && exportarJSON(igual.def) === exportarJSON(d)) return;
+  ed.biblioteca = guardarEnBiblioteca(ed.biblioteca, d);
+  guardarBiblioteca();
 }
 
 function aviso(t) { $('#ed-aviso').textContent = t; }
@@ -366,14 +476,14 @@ function cambioEditor(redibujar) {
     $('#tabla-editor tbody').innerHTML = ed.def.reglas.map((r, i) => `
       <tr data-i="${i}">
         <td>${i + 1}</td>
-        <td data-l="Estado"><input type="text" data-campo="estado" value="${escapar(r.estado)}" aria-label="Fila ${i + 1}: estado" spellcheck="false"></td>
-        <td data-l="Lee"><input type="text" data-campo="lee" value="${escapar(r.lee)}" maxlength="1" aria-label="Fila ${i + 1}: lee" spellcheck="false"></td>
-        <td data-l="Escribe"><input type="text" data-campo="escribe" value="${escapar(r.escribe)}" maxlength="1" aria-label="Fila ${i + 1}: escribe" spellcheck="false"></td>
-        <td data-l="Mueve"><select data-campo="mueve" aria-label="Fila ${i + 1}: mueve">
-          ${['I', 'D', 'N'].map((x) => `<option value="${x}" ${r.mueve === x ? 'selected' : ''}>${x} · ${{ I: 'izquierda', D: 'derecha', N: 'no se mueve' }[x]}</option>`).join('')}
+        <td data-l="${escapar(t('col.estado'))}"><input type="text" data-campo="estado" value="${escapar(r.estado)}" aria-label="${escapar(t('ed.fila', { i: i + 1, c: t('col.estado') }))}" spellcheck="false"></td>
+        <td data-l="${escapar(t('col.lee'))}"><input type="text" data-campo="lee" value="${escapar(r.lee)}" maxlength="1" aria-label="${escapar(t('ed.fila', { i: i + 1, c: t('col.lee') }))}" spellcheck="false"></td>
+        <td data-l="${escapar(t('col.escribe'))}"><input type="text" data-campo="escribe" value="${escapar(r.escribe)}" maxlength="1" aria-label="${escapar(t('ed.fila', { i: i + 1, c: t('col.escribe') }))}" spellcheck="false"></td>
+        <td data-l="${escapar(t('col.mueve'))}"><select data-campo="mueve" aria-label="${escapar(t('ed.fila', { i: i + 1, c: t('col.mueve') }))}">
+          ${['I', 'D', 'N'].map((x) => `<option value="${x}" ${r.mueve === x ? 'selected' : ''}>${letraMov(x)} · ${escapar(tm(`mov.${x}`))}</option>`).join('')}
         </select></td>
-        <td data-l="Nuevo estado"><input type="text" data-campo="nuevo" value="${escapar(r.nuevo)}" aria-label="Fila ${i + 1}: nuevo estado" spellcheck="false"></td>
-        <td><button class="borrar" aria-label="Borrar fila ${i + 1}" title="Borrar">×</button></td>
+        <td data-l="${escapar(t('col.nuevo'))}"><input type="text" data-campo="nuevo" value="${escapar(r.nuevo)}" aria-label="${escapar(t('ed.fila', { i: i + 1, c: t('col.nuevo') }))}" spellcheck="false"></td>
+        <td><button class="borrar" aria-label="${escapar(t('ed.borrarFila', { i: i + 1 }))}" title="${escapar(t('ed.borrar'))}">×</button></td>
       </tr>`).join('');
   }
   const d = definicionEditor();
@@ -381,7 +491,7 @@ function cambioEditor(redibujar) {
   const filasError = new Set(v.errores.map((e) => e.fila).filter(Boolean));
   document.querySelectorAll('#tabla-editor tbody tr').forEach((tr) => tr.classList.toggle('con-error', filasError.has(Number(tr.dataset.i) + 1)));
   const lista = [];
-  if (v.valido) lista.push(`<p class="ok">✓ La máquina es válida: ${d.reglas.length} reglas, alfabeto {${v.alfabeto.map(escapar).join(', ')}}.</p>`);
+  if (v.valido) lista.push(`<p class="ok">${escapar(t('ed.valida', { n: d.reglas.length, a: v.alfabeto.join(', ') }))}</p>`);
   v.errores.forEach((e) => lista.push(`<p class="error">✕ ${escapar(e.mensaje)}</p>`));
   v.avisos.forEach((a) => lista.push(`<p class="aviso">! ${escapar(a.mensaje)}</p>`));
   $('#ed-validacion').innerHTML = lista.join('');
@@ -389,11 +499,196 @@ function cambioEditor(redibujar) {
   guardar(CLAVE_EDITOR, JSON.parse(exportarJSON(d)));
 }
 
+/* ---------- ejercicios ---------- */
+function superados() { return new Set(cargar(CLAVE_EJERCICIOS) ?? []); }
+
+function textoEsperado(c) {
+  if ('acepta' in c) return t(c.acepta ? 'ejr.acepta' : 'ejr.rechaza');
+  return c.resultado || t('ejr.vacia');
+}
+
+function dibujarEjercicios() {
+  const hechos = superados();
+  $('#lista-ejercicios').innerHTML = EJERCICIOS.map((e) => {
+    const tx = e[idioma()] ?? e.es;
+    return `
+    <article class="tarjeta ejercicio" id="ejr-${e.id}" data-ejercicio="${e.id}" aria-labelledby="ejr-t-${e.id}">
+      <div class="ejr-cabecera"><span class="nivel">${escapar(t('ejr.nivel', { n: e.nivel }))}</span>
+        <span class="insignia" ${hechos.has(e.id) ? '' : 'hidden'}>${escapar(t('ejr.superado'))}</span></div>
+      <h2 id="ejr-t-${e.id}">${escapar(tx.titulo)}</h2>
+      <p>${escapar(tx.objetivo)}</p>
+      <div class="tabla-envoltura"><table class="tabla casos">
+        <caption class="oculto">${escapar(t('ejr.casos'))}</caption>
+        <thead><tr><th scope="col">${escapar(t('ejr.entrada'))}</th><th scope="col">${escapar(t('ejr.esperado'))}</th><th scope="col">${escapar(t('ejr.obtenido'))}</th></tr></thead>
+        <tbody>${e.casos.map((c, i) => `<tr data-caso="${i}"><td>${escapar(c.entrada || t('ejr.vacia'))}</td><td>${escapar(textoEsperado(c))}</td><td class="obtenido">—</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div class="botones">
+        <button class="boton secundario" data-accion="empezar">${escapar(t('ejr.empezar'))}</button>
+        <button class="boton primario" data-accion="comprobar">${escapar(t('ejr.comprobar'))}</button>
+      </div>
+      <p class="resultado-ejr" role="status" aria-live="polite"></p>
+      <div class="pistas">
+        ${tx.pistas.map((p, i) => `<details class="pista-ejr" data-pista="${i}" ${i > 0 ? 'hidden' : ''}><summary>${escapar(t('ejr.pista', { n: i + 1 }))}</summary><p>${escapar(p)}</p></details>`).join('')}
+        <details class="solucion" hidden><summary>${escapar(t('ejr.solucion'))}</summary>
+          <pre>${escapar(reglasATexto(solucionEjercicio(e).reglas))}</pre>
+          <button class="boton texto" data-accion="solucion">${escapar(t('ejr.cargarSol'))}</button>
+        </details>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function iniciarEjercicios() {
+  dibujarEjercicios();
+  const lista = $('#lista-ejercicios');
+  lista.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button[data-accion]');
+    if (!b) return;
+    const ej = buscarEjercicio(b.closest('[data-ejercicio]').dataset.ejercicio);
+    if (b.dataset.accion === 'empezar') abrirEjercicio(ej, crearDefinicion(ej.plantilla));
+    else if (b.dataset.accion === 'solucion') abrirEjercicio(ej, solucionEjercicio(ej));
+    else comprobar(ej);
+  });
+  // Las pistas se abren en orden; la solución aparece después de la última pista.
+  lista.addEventListener('toggle', (ev) => {
+    const d = ev.target;
+    if (!d.open || !d.classList?.contains('pista-ejr')) return;
+    const sig = d.nextElementSibling;
+    if (sig) sig.hidden = false;
+  }, true);
+}
+
+function abrirEjercicio(ej, def) {
+  respaldarBorrador();
+  ed.ejercicio = ej.id;
+  const tx = ej[idioma()] ?? ej.es;
+  ponerEnEditor({ ...def, nombre: tx.titulo });
+  location.hash = '#/editor';
+  aviso(t('ejr.cargado', { t: tx.titulo }));
+  bannerEjercicio();
+}
+
+function bannerEjercicio(resumen = '') {
+  const el = $('#ed-ejercicio');
+  const ej = ed.ejercicio && buscarEjercicio(ed.ejercicio);
+  el.hidden = !ej;
+  if (!ej) return;
+  const tx = ej[idioma()] ?? ej.es;
+  el.innerHTML = `<span>${escapar(t('ejr.activo', { t: tx.titulo }))} ${escapar(tx.objetivo)}</span>
+    <span class="botones"><button class="boton primario chico" data-comprobar>${escapar(t('ejr.comprobar'))}</button>
+    <a class="boton secundario chico" href="#/ejercicios?id=${ej.id}">${escapar(t('ejr.volver'))}</a></span>
+    <strong class="resumen" role="status" aria-live="polite">${escapar(resumen)}</strong>`;
+}
+
+function comprobarDesdeEditor() {
+  const ej = buscarEjercicio(ed.ejercicio);
+  if (ej) bannerEjercicio(comprobar(ej));
+}
+
+/** Prueba la máquina del editor con el ejercicio y pinta el resultado. Devuelve el resumen. */
+function comprobar(ej) {
+  const r = comprobarEjercicio(ej, definicionEditor());
+  const tarjeta = document.getElementById(`ejr-${ej.id}`);
+  let resumen;
+  if (r.invalida) resumen = t('ejr.invalida', { e: r.invalida[0].mensaje });
+  else {
+    const ok = r.casos.filter((c) => c.ok).length;
+    resumen = r.aprobado ? t('ejr.aprobado', { n: r.casos.length }) : t('ejr.fallo', { ok, n: r.casos.length });
+    r.casos.forEach((c, i) => {
+      const celda = tarjeta.querySelector(`tr[data-caso="${i}"] .obtenido`);
+      const obtenido = ('acepta' in ej.casos[i]) ? t(`ejr.motivo.${c.motivo}`) : (c.motivo === 'final' ? (c.obtenido || t('ejr.vacia')) : t(`ejr.motivo.${c.motivo}`));
+      celda.textContent = `${c.ok ? '✓' : '✕'} ${obtenido}`;
+      celda.className = `obtenido ${c.ok ? 'ok' : 'mal'}`;
+    });
+  }
+  if (r.aprobado) {
+    const hechos = superados();
+    hechos.add(ej.id);
+    guardar(CLAVE_EJERCICIOS, [...hechos]);
+    tarjeta.querySelector('.insignia').hidden = false;
+  }
+  const p = tarjeta.querySelector('.resultado-ejr');
+  p.textContent = resumen;
+  p.className = `resultado-ejr ${r.aprobado ? 'ok' : 'mal'}`;
+  document.body.dataset.ejercicio = r.aprobado ? 'aprobado' : 'pendiente';
+  return resumen;
+}
+
+/* ---------- tema e idioma ---------- */
+function temaPreferido() {
+  const guardado = cargar(CLAVE_TEMA);
+  if (guardado === 'oscuro' || guardado === 'claro') return guardado;
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+}
+
+function aplicarTema(tema) {
+  const oscuro = tema === 'oscuro';
+  document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+  $('#b-tema').setAttribute('aria-pressed', String(oscuro));
+  $('#tema-icono').textContent = oscuro ? '☀' : '☾';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', oscuro ? '#000000' : '#f5f5f7');
+  sim.vista3d?.ponerTema?.(oscuro);
+}
+
+function aplicarIdioma(l, { redibujar = true } = {}) {
+  ponerIdioma(l);
+  ponerIdiomaMotor(l);
+  document.documentElement.lang = idioma();
+  traducirPagina();
+  const b = $('#b-idioma');
+  b.textContent = t('idioma.boton');
+  b.setAttribute('aria-label', t('idioma.aria'));
+  b.setAttribute('lang', t('idioma.lang'));
+  document.querySelector('meta[name="description"]')?.setAttribute('content', t('doc.descripcion'));
+  if (!redibujar) return;
+  llenarSelectEjemplos();
+  llenarSelectEditor();
+  dibujarEjemplos();
+  dibujarEjercicios();
+  iniciarAprende();
+  dibujarBiblioteca();
+  bannerEjercicio();
+  cambioEditor(true);
+  mostrarVelocidad();
+  if (sim.def) {
+    textosSimulador();
+    const v = validar(sim.def);
+    sim.invalida = v.valido ? null : v.errores;
+    sim.traza = rehacerTraza();
+    actualizar({ animar: false });
+  }
+  if (pr.m) prDibujar({ animar: false });
+  navegarTitulo();
+}
+
+function navegarTitulo() {
+  const ruta = rutaActual();
+  document.title = ruta === 'inicio' || !document.querySelector(`[data-vista="${ruta}"]`) ? t('app') : `${t(`ruta.${ruta}`)} · ${t('app')}`;
+}
+
+function iniciarAjustes() {
+  aplicarTema(temaPreferido());
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (!cargar(CLAVE_TEMA)) aplicarTema(temaPreferido()); });
+  $('#b-tema').addEventListener('click', () => {
+    const nuevo = document.documentElement.dataset.tema === 'oscuro' ? 'claro' : 'oscuro';
+    guardar(CLAVE_TEMA, nuevo);
+    aplicarTema(nuevo);
+  });
+  $('#b-idioma').addEventListener('click', () => {
+    const nuevo = idioma() === 'es' ? 'en' : 'es';
+    guardar(CLAVE_IDIOMA, nuevo);
+    aplicarIdioma(nuevo);
+  });
+}
+
 /* ---------- aprende ---------- */
 function iniciarAprende() {
-  $('#indice-aprende').innerHTML = [...TEMAS.map((t) => [t.id, t.titulo]), ['linea', 'Línea de tiempo'], ['referencias', 'Referencias']]
-    .map(([id, t]) => `<a href="#/aprende?tema=${id}">${escapar(t)}</a>`).join('');
-  $('#contenido-aprende').innerHTML = TEMAS.map((t) => `
+  const en = idioma() === 'en';
+  const temas = en ? TEMAS_EN : TEMAS;
+  const linea = en ? LINEA_TIEMPO_EN : LINEA_TIEMPO;
+  $('#indice-aprende').innerHTML = [...temas.map((x) => [x.id, x.titulo]), ['linea', t('ap.linea')], ['referencias', t('ap.referencias')]]
+    .map(([id, x]) => `<a href="#/aprende?tema=${id}">${escapar(x)}</a>`).join('');
+  $('#contenido-aprende').innerHTML = temas.map((t) => `
     <article class="tarjeta tema" id="tema-${t.id}">
       <div class="grid">
         <div><h2>${t.titulo}</h2>${t.html}
@@ -402,11 +697,11 @@ function iniciarAprende() {
       </div>
     </article>`).join('') + `
     <article class="tarjeta tema" id="tema-linea">
-      <h2>Línea de tiempo</h2>
-      <ol class="linea-tiempo">${LINEA_TIEMPO.map(([a, h]) => `<li><b>${a}</b><span>${h}</span></li>`).join('')}</ol>
+      <h2>${escapar(t('ap.linea'))}</h2>
+      <ol class="linea-tiempo">${linea.map(([a, h]) => `<li><b>${a}</b><span>${h}</span></li>`).join('')}</ol>
     </article>
     <article class="tarjeta tema" id="tema-referencias">
-      <h2>Referencias</h2>
+      <h2>${escapar(t('ap.referencias'))}</h2>
       <ol class="referencias">${REFERENCIAS.map(([t, u]) => `<li>${escapar(t)} <a href="${u}" rel="noopener" target="_blank">${escapar(u.replace(/^https:\/\//, ''))}</a></li>`).join('')}</ol>
     </article>`;
 }
@@ -464,12 +759,23 @@ function navegar() {
   document.querySelectorAll('.menu a').forEach((a) => (a.dataset.ruta === ruta ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   document.body.classList.toggle('presentando', ruta === 'presentacion');
   const p = parametros();
-  const titulos = { inicio: 'Máquina de Turing', simulador: 'Simulador', ejemplos: 'Ejemplos', editor: 'Editor', aprende: 'Aprende', presentacion: 'Presentación' };
-  document.title = `${titulos[ruta]} · Máquina de Turing`;
+  document.title = ruta === 'inicio' ? t('app') : `${t(`ruta.${ruta}`)} · ${t('app')}`;
 
   if (ruta === 'simulador') {
     if (p.get('m')) {
-      try { const d = decodificar(p.get('m')); ponerEnEditor(d); cargarEnSimulador(d, '__propia'); } catch { cargarEnSimulador(crearDefinicion(buscarEjemplo('sumar-uno')), 'sumar-uno'); }
+      if (p.get('m') !== sim.enlace) {
+        sim.enlace = p.get('m');
+        try {
+          const d = decodificarMaquina(p.get('m'));
+          respaldarBorrador();
+          ponerEnEditor(d);
+          cargarEnSimulador(d, '__propia');
+          avisoGlobal(t('comp.abierta', { n: d.nombre }));
+        } catch {
+          cargarEnSimulador(crearDefinicion(buscarEjemplo('sumar-uno')), 'sumar-uno');
+          avisoGlobal(t('comp.malo'));
+        }
+      }
     } else if (p.get('propia') && sim.pendiente) {
       cargarEnSimulador(sim.pendiente, '__propia');
       sim.pendiente = null;
@@ -483,16 +789,22 @@ function navegar() {
   if (ruta === 'presentacion') prReiniciar();
   if (ruta === 'aprende' && p.get('tema')) {
     document.getElementById(`tema-${p.get('tema')}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else if (ruta === 'ejercicios' && p.get('id')) {
+    document.getElementById(`ejr-${p.get('id')}`)?.scrollIntoView({ block: 'start' });
   } else window.scrollTo(0, 0);
   if (ruta !== 'inicio') $('#contenido').focus({ preventScroll: true });
 }
 
 function iniciar() {
+  const l = cargar(CLAVE_IDIOMA) === 'en' ? 'en' : 'es';
+  aplicarIdioma(l, { redibujar: false });
   iniciarSimulador();
   iniciarEjemplos();
   iniciarEditor();
+  iniciarEjercicios();
   iniciarAprende();
   iniciarPresentacion();
+  iniciarAjustes();
   addEventListener('hashchange', navegar);
   addEventListener('resize', () => { if (rutaActual() === 'simulador' && matchMedia('(min-width: 761px)').matches) asegurar3D(); });
   navegar();

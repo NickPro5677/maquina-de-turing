@@ -1,9 +1,11 @@
 /* Service worker: guarda los archivos de la web para que funcione sin internet. */
-const VERSION = 'maquina-turing-v1.0.1';
+const VERSION = 'maquina-turing-v1.1.0';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/estilos.css',
   './src/app.js', './src/motor/index.js', './src/motor/maquina.js', './src/motor/ejemplos.js',
-  './src/ui/vista2d.js', './src/ui/vista3d.js', './src/ui/aprende.js',
+  './src/motor/textos.js', './src/motor/enlace.js', './src/motor/ejercicios.js', './src/motor/biblioteca.js',
+  './src/ui/vista2d.js', './src/ui/vista3d.js', './src/ui/aprende.js', './src/ui/aprende.en.js',
+  './src/i18n/index.js', './src/i18n/es.js', './src/i18n/en.js',
   './vendor/three/three.module.min.js', './vendor/three/addons/OrbitControls.js',
   './icons/icono.svg', './icons/icono-192.png', './icons/icono-512.png',
 ];
