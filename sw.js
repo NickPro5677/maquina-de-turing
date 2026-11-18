@@ -1,5 +1,5 @@
 /* Service worker: guarda los archivos de la web para que funcione sin internet. */
-const VERSION = 'maquina-turing-v1.1.0';
+const VERSION = 'maquina-turing-v1.1.1';
 const ARCHIVOS = [
   './', './index.html', './manifest.webmanifest', './css/estilos.css',
   './src/app.js', './src/motor/index.js', './src/motor/maquina.js', './src/motor/ejemplos.js',

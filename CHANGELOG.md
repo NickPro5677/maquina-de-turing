@@ -1,5 +1,21 @@
 # Cambios
 
+## v1.1.1 · 2026-11-18
+
+- En el teléfono, los botones pequeños ahora miden al menos 44×44 px: las pestañas 2D/3D, el idioma, el tema, el menú, el botón de borrar una regla y las pistas. El borde de la pantalla (la muesca del teléfono) ya no tapa el contenido.
+- El menú de siete secciones tiene más aire y, en el simulador, se vuelven a ver las palabras «Ejemplo» y «Cinta de entrada».
+- Las casillas de la cinta 2D se leen en español o en inglés, igual que el resto de la página.
+- Las flechas, la barra espaciadora y la tecla R siguen funcionando aunque el foco esté en un botón. Si estás escribiendo en un campo, no se disparan.
+- Antes de borrar una máquina guardada, la página pregunta si de verdad quieres hacerlo.
+- Las pestañas 2D y 3D se pueden cambiar con el teclado (flecha izquierda y flecha derecha).
+
+## v1.1.1 · 2026-11-18 (English)
+
+- Phone controls are at least 44×44 px, and the layout respects the screen notch.
+- The seven-item menu has more room, and the Example / Input tape labels stay visible.
+- 2D tape cells are announced in the active language. Shortcuts keep working when a button is focused, and deleting a saved machine asks first.
+- The 2D/3D tabs work with the keyboard.
+
 ## v1.1.0 · 2026-10-30
 
 - Compartir: la máquina va dentro del enlace (`#/simulador?m=…`) y se abre al entrar. Botón **Compartir** en el simulador y el editor; en el teléfono usa el menú de compartir. Un enlace dañado muestra un aviso y abre el ejemplo principal.
