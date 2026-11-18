@@ -29,6 +29,24 @@ const TOPE_TRAZA = 5000; // filas que se guardan; en pantalla se pintan las últ
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* modo privado */ } };
 const cargar = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 
+/**
+ * Los atajos (flechas, espacio, R) siguen con el foco en un botón.
+ * Se paran en un campo de texto, un textarea, un select o la barra de velocidad,
+ * porque esas teclas ya sirven para escribir o mover ese control.
+ */
+export function focoBloqueaAtajo(objetivo) {
+  const campo = objetivo?.closest?.('textarea, select, input');
+  if (!campo) return false;
+  if (campo.matches('textarea, select')) return true;
+  const tipo = (campo.getAttribute('type') || 'text').toLowerCase();
+  return !['button', 'submit', 'reset', 'image'].includes(tipo);
+}
+
+/** Texto de la pregunta antes de borrar una máquina guardada. */
+export function textoConfirmarBorrado(nombre) {
+  return t('ed.confirmarBorrar', { n: nombre });
+}
+
 let avisoTemporizador = 0;
 /** Mensaje breve abajo de la pantalla (lo leen también los lectores de pantalla). */
 function avisoGlobal(texto) {
@@ -115,8 +133,21 @@ function iniciarSimulador() {
   for (const id of ['2d', '3d']) {
     $(`#tab-${id}`).addEventListener('click', () => elegirPestana(id));
   }
+  elegirPestana($('.sim-vistas').dataset.pestana || '2d');
+  $('.pestanas').addEventListener('keydown', (ev) => {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+    const orden = ['2d', '3d'];
+    const actual = orden.findIndex((id) => $(`#tab-${id}`).getAttribute('aria-selected') === 'true');
+    const base = actual < 0 ? 0 : actual;
+    const siguiente = orden[(base + (ev.key === 'ArrowRight' ? 1 : -1) + orden.length) % orden.length];
+    elegirPestana(siguiente);
+    $(`#tab-${siguiente}`).focus();
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
   document.addEventListener('keydown', (ev) => {
-    if (rutaActual() !== 'simulador' || ev.target.closest('input, select, textarea, button')) return;
+    if (rutaActual() !== 'simulador' || focoBloqueaAtajo(ev.target)) return;
+    if (ev.target.closest?.('[role="tab"]') && (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft')) return;
     if (ev.key === 'ArrowRight') { pausar(); paso(); ev.preventDefault(); }
     else if (ev.key === 'ArrowLeft') { pausar(); pasoAtras(); ev.preventDefault(); }
     else if (ev.key === ' ') { if (sim.corriendo) pausar(); else ejecutar(); ev.preventDefault(); }
@@ -140,8 +171,12 @@ function llenarSelectEjemplos() {
 
 function elegirPestana(id) {
   $('.sim-vistas').dataset.pestana = id;
-  $('#tab-2d').setAttribute('aria-selected', String(id === '2d'));
-  $('#tab-3d').setAttribute('aria-selected', String(id === '3d'));
+  for (const tab of ['2d', '3d']) {
+    const el = $(`#tab-${tab}`);
+    const activo = tab === id;
+    el.setAttribute('aria-selected', String(activo));
+    el.tabIndex = activo ? 0 : -1;
+  }
   if (id === '3d') asegurar3D();
 }
 
@@ -452,7 +487,7 @@ function iniciarEditor() {
     if (b.dataset.accion === 'abrir') {
       const x = buscarEnBiblioteca(ed.biblioteca, nombre);
       if (x) { ponerEnEditor(x.def); aviso(t('ed.abierta', { n: nombre })); }
-    } else {
+    } else if (confirm(textoConfirmarBorrado(nombre))) {
       ed.biblioteca = borrarDeBiblioteca(ed.biblioteca, nombre);
       guardarBiblioteca();
       aviso(t('ed.borrada', { n: nombre }));
@@ -871,4 +906,4 @@ function iniciar() {
   }
 }
 
-iniciar();
+if (typeof document !== 'undefined') iniciar();

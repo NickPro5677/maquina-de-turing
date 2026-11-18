@@ -45,7 +45,7 @@ q0, _ -> 1, S, qF
 
 ```bash
 npm install     # only needed for the single-file build (esbuild)
-npm test        # 85 tests with node --test
+npm test        # 92 tests with node --test
 npm run build   # writes dist/maquina-turing.html
 ```
 

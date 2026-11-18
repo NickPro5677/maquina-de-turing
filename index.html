@@ -81,20 +81,20 @@
         <form id="form-entrada" class="form-entrada" autocomplete="off">
           <label class="campo">
             <span data-i18n="sim.ejemplo">Ejemplo</span>
-            <select id="sel-ejemplo"></select>
+            <select id="sel-ejemplo" data-i18n-aria="sim.ejemplo" aria-label="Ejemplo"></select>
           </label>
           <label class="campo">
             <span data-i18n="sim.cinta">Cinta de entrada</span>
-            <input id="in-cinta" type="text" inputmode="text" spellcheck="false" aria-describedby="ayuda-cinta">
+            <input id="in-cinta" type="text" inputmode="text" spellcheck="false" aria-describedby="ayuda-cinta" data-i18n-aria="sim.cinta" aria-label="Cinta de entrada" data-i18n-ph="sim.cinta" placeholder="Cinta de entrada">
           </label>
           <button class="boton secundario" type="submit" data-i18n="sim.cargar">Cargar</button>
         </form>
       </div>
       <p id="ayuda-cinta" class="ayuda" data-i18n="sim.ayuda">Escribe los símbolos seguidos (por ejemplo 111). El guion bajo _ es una casilla en blanco.</p>
 
-      <div class="pestanas" role="tablist" data-i18n-aria="sim.vista" aria-label="Vista">
-        <button role="tab" id="tab-2d" aria-selected="true" aria-controls="panel-2d">2D</button>
-        <button role="tab" id="tab-3d" aria-selected="false" aria-controls="panel-3d">3D</button>
+      <div class="pestanas" role="tablist" aria-orientation="horizontal" data-i18n-aria="sim.vista" aria-label="Vista">
+        <button role="tab" id="tab-2d" aria-selected="true" aria-controls="panel-2d" tabindex="0">2D</button>
+        <button role="tab" id="tab-3d" aria-selected="false" aria-controls="panel-3d" tabindex="-1">3D</button>
       </div>
 
       <div class="sim-vistas" data-pestana="2d">

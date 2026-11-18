@@ -1,4 +1,13 @@
 /** Vista 2D: la cinta con casillas, el cabezal fijo en el centro y el estado debajo. */
+import { t } from '../i18n/index.js';
+
+/** Nombre accesible de una casilla, en el idioma activo. */
+export function etiquetaCasilla(i, simbolo, esBlanco, bajoCabezal) {
+  const s = esBlanco ? t('cinta.blanco') : simbolo;
+  const extra = bajoCabezal ? t('cinta.bajo') : '';
+  return t('cinta.casilla', { i, s, extra });
+}
+
 export class Vista2D {
   constructor(contenedor) {
     this.el = contenedor;
@@ -37,7 +46,8 @@ export class Vista2D {
       if (s === m.def.blanco) clases.push('blanco');
       if (i === c) clases.push('cabezal');
       if (i === escrita) clases.push('escrita');
-      partes.push(`<div class="${clases.join(' ')}" aria-label="casilla ${i}: ${s === m.def.blanco ? 'blanco' : s}${i === c ? ', bajo el cabezal' : ''}">${escapar(s)}<small aria-hidden="true">${i}</small></div>`);
+      const etiqueta = escapar(etiquetaCasilla(i, s, s === m.def.blanco, i === c));
+      partes.push(`<div class="${clases.join(' ')}" aria-label="${etiqueta}">${escapar(s)}<small aria-hidden="true">${i}</small></div>`);
     }
     this.tira.innerHTML = partes.join('');
     this.cabezal.querySelector('.estado').textContent = m.estado;

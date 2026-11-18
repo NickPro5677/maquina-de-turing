@@ -140,7 +140,7 @@ maquina-de-turing/
 
 ```bash
 npm install     # solo hace falta para construir el archivo único (esbuild)
-npm test        # 85 pruebas con node --test, sin dependencias
+npm test        # 92 pruebas con node --test, sin dependencias
 npm run build   # crea dist/maquina-turing.html
 ```
 
