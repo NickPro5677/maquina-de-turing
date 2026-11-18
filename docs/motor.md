@@ -43,7 +43,7 @@ m.motivo;          // 'final' | 'acepta' | 'rechaza' | 'sin-regla' | 'limite' | 
 - **Cinta**: un `Map` posición → símbolo. Las casillas en blanco no se guardan, así que la cinta es ilimitada hacia ambos lados (posiciones negativas incluidas).
 - **Paso atrás**: antes de cada paso se guarda la posición, el símbolo anterior, el estado y la regla. Deshacer es restaurar eso.
 - **Parada**: al entrar en un estado final, de aceptación o de rechazo; o si no hay regla para *(estado, símbolo)*.
-- **Límite de pasos**: 10 000 por defecto (`new MaquinaTuring(def, { limitePasos: 500 })`). Al llegar, `motivo` es `'limite'`.
+- **Límite de pasos**: 10 000 por defecto (`new MaquinaTuring(def, { limitePasos: 500 })`). Al llegar, `motivo` es `'limite'`. `fijarLimite(n)` lo cambia sin reiniciar la cinta. `interpretarLimitePasos(texto)` acepta un entero entre 1 y 1 000 000.
 
 ## Validar
 
@@ -55,7 +55,7 @@ Avisos: combinaciones *(estado, símbolo)* sin regla, símbolos de la entrada qu
 
 ## Traza, texto y JSON
 
-- `traza(def, entrada)`: la tabla paso a paso, como en el ejemplo del README.
+- `traza(def, entrada)`: la tabla paso a paso, como en el ejemplo del README. `cintaTraza(m)` muestra la cinta con el cabezal entre corchetes. Si tiene más de 61 casillas, solo guarda 30 a cada lado y pone `…` donde hay más. Las cintas cortas se ven enteras.
 - `parsearReglas(texto)` / `reglasATexto(reglas)`: reglas como texto `q0, 1 -> 1, D, q0`.
 - `exportarJSON(def)` / `importarJSON(texto)`: guardar y cargar máquinas.
 

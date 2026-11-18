@@ -1,5 +1,17 @@
 # Cambios
 
+## v1.2.0 · 2026-11-18
+
+- Traza con cintas largas: cada fila guarda solo 30 casillas a cada lado del cabezal. Si hay más, se ve «…». Las cintas cortas se ven igual que antes y el paso atrás sigue funcionando. Con 5000 unos, armar la traza bajó de unos 1,03 s a unos 21 ms (el motor sigue en unos 4 ms).
+- Vista 3D: las casillas se reutilizan (solo las que se ven) y, al reiniciar o cambiar de máquina, se liberan las geometrías y los materiales.
+- Botón **Correr hasta el final** y un campo para el límite de pasos (antes fijo en 10 000). Acepta un entero entre 1 y 1 000 000, en español y en inglés.
+
+## v1.2.0 · 2026-11-18 (English)
+
+- Long-tape trace rows keep only 30 cells on each side of the head (`…` marks the rest). Short tapes look the same. Tracing 5000 ones dropped from about 1.03 s to about 21 ms.
+- The 3D tape reuses a pool of the visible cells and frees geometries and materials when you reset or switch machines.
+- **Run to the end** button and an editable step limit (a whole number from 1 to 1 000 000).
+
 ## v1.1.1 · 2026-11-18
 
 - En el teléfono, los botones pequeños ahora miden al menos 44×44 px: las pestañas 2D/3D, el idioma, el tema, el menú, el botón de borrar una regla y las pistas. El borde de la pantalla (la muesca del teléfono) ya no tapa el contenido.

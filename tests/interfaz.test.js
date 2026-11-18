@@ -106,7 +106,7 @@ test('móvil: objetivos de 44 px, etiquetas visibles y área segura', () => {
 
 test('la versión del service worker coincide con package.json', () => {
   const version = JSON.parse(leer('../package.json')).version;
-  assert.equal(version, '1.1.1');
+  assert.equal(version, '1.2.0');
   assert.match(leer('../sw.js'), new RegExp(`maquina-turing-v${version.replaceAll('.', '\\.')}`));
   assert.match(leer('../CHANGELOG.md'), new RegExp(`v${version.replaceAll('.', '\\.')}`));
 });

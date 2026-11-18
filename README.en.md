@@ -16,7 +16,7 @@ An interactive Turing machine simulator that runs in the browser, on phones and 
 
 ## Features
 
-- **Simulator**: step, step back, run, pause, reset and speed. A transition table that highlights the active rule, and a step-by-step trace.
+- **Simulator**: step, step back, run, pause, run to the end, reset, speed and a step limit. A transition table that highlights the active rule, and a step-by-step trace (on a long tape, only a window around the head).
 - **3D view** (Three.js, vendored in the repo): rotate it with a finger or the mouse. It respects the system's reduced-motion setting.
 - **11 examples**: add 1 in unary, invert bits, add two unary numbers, binary increment, palindrome, copy a string, parity, double a binary number, 2- and 3-state busy beavers, and an endless loop.
 - **Exercises**: 5 challenges. Each has a goal, test cases checked automatically with a step limit, hints that open in order, and the solution last.
@@ -45,7 +45,7 @@ q0, _ -> 1, S, qF
 
 ```bash
 npm install     # only needed for the single-file build (esbuild)
-npm test        # 77 tests with node --test
+npm test        # 92 tests with node --test
 npm run build   # writes dist/maquina-turing.html
 ```
 

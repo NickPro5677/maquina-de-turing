@@ -19,6 +19,25 @@ export const MAX_REGLAS = 500;
 /** Límite de pasos por defecto para no quedarse colgado en un bucle infinito. */
 export const LIMITE_PASOS = 10000;
 
+/** El campo de la interfaz solo acepta enteros dentro de este rango. */
+export const LIMITE_PASOS_MIN = 1;
+export const LIMITE_PASOS_MAX = 1000000;
+
+/**
+ * Lee el límite de pasos que escribe una persona.
+ * Acepta un entero entre 1 y 1 000 000 (se permiten ceros a la izquierda).
+ * @returns {{ ok: true, n: number } | { ok: false, error: 'formato' | 'pequeno' | 'grande' }}
+ */
+export function interpretarLimitePasos(valor) {
+  const texto = String(valor ?? '').trim();
+  if (!/^[0-9]+$/.test(texto)) return { ok: false, error: 'formato' };
+  const n = Number(texto);
+  if (!Number.isSafeInteger(n)) return { ok: false, error: 'formato' };
+  if (n < LIMITE_PASOS_MIN) return { ok: false, error: 'pequeno' };
+  if (n > LIMITE_PASOS_MAX) return { ok: false, error: 'grande' };
+  return { ok: true, n };
+}
+
 const ALIAS_MOVIMIENTO = {
   i: 'I', l: 'I', '<': 'I', izq: 'I', izquierda: 'I', left: 'I',
   d: 'D', r: 'D', '>': 'D', der: 'D', derecha: 'D', right: 'D',
@@ -250,6 +269,20 @@ export class MaquinaTuring {
     return n;
   }
 
+  /**
+   * Cambia el tope de pasos sin reiniciar la cinta.
+   * Si se había parado solo por el límite y el nuevo tope es mayor, puede seguir.
+   * Si el tope nuevo ya se superó, se para por límite.
+   */
+  fijarLimite(n) {
+    this.limitePasos = n;
+    if (this.motivo === 'limite' || this.motivo === null) {
+      this._comprobarParada();
+      if (!this.motivo && this.pasos >= this.limitePasos) this.motivo = 'limite';
+    }
+    return this;
+  }
+
   /** Extremos ocupados de la cinta (incluye siempre la posición del cabezal). */
   limites() {
     const pos = [...this.cinta.keys(), this.cabezal];
@@ -322,14 +355,74 @@ export function traza(def, entrada, { maximo = 200 } = {}) {
   return filas;
 }
 
-/** Cinta para la traza: muestra la entrada original más una casilla, el cabezal y lo escrito. */
-export function cintaTraza(m) {
-  const k = [...m.cinta.keys()];
-  const a = Math.min(0, m.cabezal, ...k);
-  const b = Math.max(m.cabezal, ...k, [...m.entrada].length);
+/** Casillas a cada lado del cabezal que guarda la traza cuando la cinta no cabe entera. */
+export const RADIO_TRAZA = 30;
+
+const finEntradaCache = new WeakMap();
+
+/** Posición justo después de la entrada (igual que `[...entrada].length`), calculada una sola vez. */
+function finDeEntrada(m) {
+  const prev = finEntradaCache.get(m);
+  if (prev && prev.entrada === m.entrada) return prev.n;
+  const n = [...m.entrada].length;
+  finEntradaCache.set(m, { entrada: m.entrada, n });
+  return n;
+}
+
+function extremosEscritos(m) {
+  let minK = Infinity;
+  let maxK = -Infinity;
+  for (const p of m.cinta.keys()) {
+    if (p < minK) minK = p;
+    if (p > maxK) maxK = p;
+  }
+  return { minK, maxK };
+}
+
+function unirCinta(m, a, b, hayIzq, hayDer) {
   const partes = [];
+  if (hayIzq) partes.push('…');
   for (let i = a; i <= b; i++) partes.push(i === m.cabezal ? `[${m.leer(i)}]` : m.leer(i));
+  if (hayDer) partes.push('…');
   return partes.join(' ');
+}
+
+function ventanaTraza(m, radio, a, b) {
+  const izq = Math.max(a, m.cabezal - radio);
+  const der = Math.min(b, m.cabezal + radio);
+  return unirCinta(m, izq, der, izq > a, der < b);
+}
+
+/**
+ * Cinta para la traza: el cabezal va entre corchetes.
+ * Si cabe en ±30 casillas (61 en total), se muestra entera, como siempre.
+ * Si es más larga, solo la ventana alrededor del cabezal; «…» avisa de que hay más.
+ * Así cada fila ocupa unos cientos de caracteres y no la cinta completa.
+ */
+export function cintaTraza(m, radio = RADIO_TRAZA) {
+  const finEntrada = finDeEntrada(m);
+  const a0 = Math.min(0, m.cabezal);
+  const b0 = Math.max(m.cabezal, finEntrada);
+  const tope = radio * 2 + 1;
+  // Lo escrito fuera de la entrada solo puede alargar la cinta, nunca acortarla.
+  if (b0 - a0 + 1 <= tope) {
+    const { minK, maxK } = extremosEscritos(m);
+    const a = Math.min(a0, minK);
+    const b = Math.max(b0, maxK);
+    if (b - a + 1 <= tope) return unirCinta(m, a, b, false, false);
+    return ventanaTraza(m, radio, a, b);
+  }
+  let izq = m.cabezal - radio;
+  let der = m.cabezal + radio;
+  const hayIzq = izq > a0;
+  const hayDer = der < b0;
+  // Las dos puntas ya quedan fuera de la ventana: no hace falta recorrer la cinta.
+  if (hayIzq && hayDer) return unirCinta(m, izq, der, true, true);
+  const { minK, maxK } = extremosEscritos(m);
+  const a = Math.min(a0, minK);
+  const b = Math.max(b0, maxK);
+  if (b - a + 1 <= tope) return unirCinta(m, a, b, false, false);
+  return ventanaTraza(m, radio, a, b);
 }
 
 /** Frase final según por qué paró la máquina. */
