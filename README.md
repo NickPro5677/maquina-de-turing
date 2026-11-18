@@ -22,7 +22,7 @@ Simulador interactivo y explicado de la **máquina de Turing**, en español. Mue
 
 ## Qué incluye
 
-- **Simulador**: paso, paso atrás, ejecutar, pausa, reiniciar y velocidad. Tabla de transiciones con la regla activa resaltada y una **traza paso a paso**.
+- **Simulador**: paso, paso atrás, ejecutar, pausa, correr hasta el final, reiniciar, velocidad y límite de pasos. Tabla de transiciones con la regla activa resaltada y una **traza paso a paso** (en cintas largas, solo una ventana alrededor del cabezal).
 - **Vista 3D** (Three.js, incluido en el repo): gírala con el dedo o el ratón. Respeta la opción «reducir movimiento» del sistema.
 - **11 ejemplos**: sumar 1 en unario, invertir bits, sumar dos números unarios, incrementador binario, palíndromo, copiar una cadena, paridad, doblar un binario, castor atareado de 2 y de 3 estados, y un bucle sin fin.
 - **Ejercicios**: 5 retos con objetivo, casos de prueba que se comprueban solos (con límite de pasos), pistas que se abren en orden y la solución al final.
@@ -140,11 +140,11 @@ maquina-de-turing/
 
 ```bash
 npm install     # solo hace falta para construir el archivo único (esbuild)
-npm test        # 77 pruebas con node --test, sin dependencias
+npm test        # 85 pruebas con node --test, sin dependencias
 npm run build   # crea dist/maquina-turing.html
 ```
 
-Las pruebas comprueban la traza exacta 111 → 1111, el resultado y los pasos de cada ejemplo, la aceptación y el rechazo de palíndromos, los castores atareados (2 estados: 4 unos en 6 pasos; 3 estados: 6 unos en 14 pasos, y la máquina de 21 pasos), el límite de pasos, el paso atrás, el validador y el JSON. Desde la v1.1.0 también: enlaces de ida y vuelta y enlaces dañados, la validación al importar, el corrector de ejercicios, las máquinas guardadas y que el español y el inglés tengan las mismas claves.
+Las pruebas comprueban la traza exacta 111 → 1111, el resultado y los pasos de cada ejemplo, la aceptación y el rechazo de palíndromos, los castores atareados (2 estados: 4 unos en 6 pasos; 3 estados: 6 unos en 14 pasos, y la máquina de 21 pasos), el límite de pasos, el paso atrás, el validador y el JSON. Desde la v1.1.0 también: enlaces de ida y vuelta y enlaces dañados, la validación al importar, el corrector de ejercicios, las máquinas guardadas y que el español y el inglés tengan las mismas claves. Desde la v1.2.0: la traza de una cinta larga, el límite de pasos que se puede cambiar y el pool de la vista 3D.
 
 ## Licencia
 

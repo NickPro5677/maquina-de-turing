@@ -121,12 +121,18 @@
           <button class="boton secundario" id="b-pausa" data-i18n="sim.pausa" data-i18n-title="sim.pausaT" title="Pausa (espacio)">Pausa</button>
           <button class="boton secundario" id="b-reiniciar" data-i18n="sim.reiniciar" data-i18n-title="sim.reiniciarT" title="Reiniciar (R)">Reiniciar</button>
           <button class="boton secundario" id="b-compartir" data-i18n="sim.compartir">Compartir</button>
+          <button class="boton secundario" id="b-hasta-final" data-i18n="sim.hastaFinal" data-i18n-title="sim.hastaFinalT" title="Corre de una vez hasta que la máquina pare o llegue al límite, sin animar cada paso">Correr hasta el final</button>
         </div>
         <label class="velocidad">
           <span data-i18n="sim.velocidad">Velocidad</span>
           <input id="in-velocidad" type="range" min="1" max="10" value="4">
           <output id="out-velocidad">4</output>
         </label>
+        <label class="velocidad">
+          <span data-i18n="sim.limite">Límite de pasos</span>
+          <input id="in-limite" type="text" inputmode="numeric" spellcheck="false" autocomplete="off" value="10000" style="width: 11ch" aria-describedby="limite-aviso">
+        </label>
+        <p id="limite-aviso" class="ayuda" role="status" aria-live="polite" hidden></p>
       </div>
 
       <div class="sim-tablas">
@@ -143,7 +149,7 @@
         </div>
         <div class="tarjeta">
           <h2 data-i18n="sim.traza">Traza paso a paso</h2>
-          <p class="texto-2 pequeno" data-i18n="sim.trazaAyuda">El cabezal está en [ ].</p>
+          <p class="texto-2 pequeno" data-i18n="sim.trazaAyuda">El cabezal está en [ ]. Si la cinta es larga, … quiere decir que hay más casillas.</p>
           <div class="tabla-envoltura traza" tabindex="0" role="region" data-i18n-aria="sim.traza" aria-label="Traza paso a paso">
             <table class="tabla" id="tabla-traza">
               <thead><tr><th scope="col" data-i18n="sim.paso">Paso</th><th scope="col" data-i18n="col.cinta">Cinta</th><th scope="col" data-i18n="col.estado">Estado</th><th scope="col" data-i18n="col.regla">Regla aplicada</th></tr></thead>

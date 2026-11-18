@@ -7,6 +7,7 @@ import {
   textoEjemplo, ponerIdiomaMotor, tm, letraMov, enlaceMaquina, decodificarMaquina,
   EJERCICIOS, buscarEjercicio, solucionEjercicio, comprobarEjercicio,
   leerBiblioteca, guardarEnBiblioteca, borrarDeBiblioteca, buscarEnBiblioteca, serializarBiblioteca,
+  LIMITE_PASOS, LIMITE_PASOS_MIN, LIMITE_PASOS_MAX, interpretarLimitePasos,
 } from './motor/index.js';
 import { Vista2D, escapar } from './ui/vista2d.js';
 import { Vista3D } from './ui/vista3d.js';
@@ -22,6 +23,7 @@ const CLAVE_IDIOMA = 'maquina-turing:idioma';
 const CLAVE_GUARDADAS = 'maquina-turing:guardadas';
 const CLAVE_EJERCICIOS = 'maquina-turing:ejercicios';
 const RETARDOS = [1400, 1100, 850, 650, 480, 340, 220, 120, 50, 0]; // ms por paso, velocidad 1..10
+const TOPE_TRAZA = 5000; // filas que se guardan; en pantalla se pintan las últimas 200
 
 /* ---------- utilidades ---------- */
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* modo privado */ } };
@@ -72,6 +74,7 @@ const sim = {
   vista2d: null,
   vista3d: null,
   idEjemplo: null,
+  limitePasos: LIMITE_PASOS,
 };
 
 function iniciarSimulador() {
@@ -92,6 +95,13 @@ function iniciarSimulador() {
   $('#b-ejecutar').addEventListener('click', ejecutar);
   $('#b-pausa').addEventListener('click', pausar);
   $('#b-reiniciar').addEventListener('click', reiniciar);
+  $('#b-hasta-final').addEventListener('click', correrHastaElFinal);
+  $('#in-limite').addEventListener('input', () => {
+    const ok = aplicarLimiteCampo();
+    if (!sim.m) return;
+    if (ok) actualizar({ animar: false });
+    else botones();
+  });
 
   const vel = $('#in-velocidad');
   vel.value = cargar(CLAVE_VELOCIDAD) ?? 4;
@@ -163,11 +173,14 @@ function textosSimulador() {
 
 function reiniciar() {
   pausar();
+  const escrito = interpretarLimitePasos($('#in-limite').value);
+  if (escrito.ok) sim.limitePasos = escrito.n;
+  const opciones = { entrada: sim.def.entrada, limitePasos: sim.limitePasos };
   const v = validar(sim.def);
   if (!v.valido) {
-    sim.m = new MaquinaTuring(crearDefinicion({ ...sim.def, reglas: [] }), { entrada: sim.def.entrada });
+    sim.m = new MaquinaTuring(crearDefinicion({ ...sim.def, reglas: [] }), opciones);
     sim.m.motivo = 'invalida';
-  } else sim.m = new MaquinaTuring(sim.def, { entrada: sim.def.entrada });
+  } else sim.m = new MaquinaTuring(sim.def, opciones);
   sim.invalida = !v.valido ? v.errores : null;
   $('#in-cinta').value = sim.def.entrada;
   sim.traza = [filaTraza(sim.m)];
@@ -187,7 +200,7 @@ function paso({ rapido = false } = {}) {
   const r = m.paso();
   if (!r) { actualizar({ animar: false }); return false; }
   sim.traza.push(filaTraza(m));
-  if (sim.traza.length > 5000) sim.traza.splice(1, sim.traza.length - 5000);
+  if (sim.traza.length > TOPE_TRAZA) sim.traza.splice(1, sim.traza.length - TOPE_TRAZA);
   if (!rapido) {
     const d = sim.corriendo ? Math.min(retardo() * 0.85, 900) : 900;
     actualizar({ animar: true, escrita: r.escribe !== antes.simbolo ? antes.pos : null, duracion: Math.min(d * 0.4, 320) });
@@ -205,10 +218,51 @@ function pasoAtras() {
 }
 
 function rehacerTraza() {
-  const copia = new MaquinaTuring(sim.def, { entrada: sim.def.entrada });
+  const objetivo = sim.m.pasos;
+  const copia = new MaquinaTuring(sim.def, {
+    entrada: sim.def.entrada,
+    limitePasos: Math.max(sim.m.limitePasos, objetivo),
+  });
   const filas = [filaTraza(copia)];
-  while (copia.pasos < sim.m.pasos && copia.paso()) filas.push(filaTraza(copia));
+  // Se guarda el paso 0 y, como mucho, los últimos 4999. Al pasar de 5000
+  // se suelta la fila más vieja (no el paso 0), así que queda un hueco.
+  const desde = objetivo >= TOPE_TRAZA ? objetivo - (TOPE_TRAZA - 2) : 0;
+  while (copia.pasos < objetivo && copia.paso()) {
+    if (copia.pasos >= desde) filas.push(filaTraza(copia));
+  }
   return filas;
+}
+
+/** Lee el campo del límite. Si no es válido, avisa y no cambia la máquina. */
+function aplicarLimiteCampo() {
+  const aviso = $('#limite-aviso');
+  const campo = $('#in-limite');
+  const r = interpretarLimitePasos(campo.value);
+  if (!r.ok) {
+    aviso.hidden = false;
+    aviso.textContent = t(`sim.limiteErr.${r.error}`, {
+      n: r.error === 'grande' ? LIMITE_PASOS_MAX : LIMITE_PASOS_MIN,
+    });
+    campo.setAttribute('aria-invalid', 'true');
+    return false;
+  }
+  aviso.hidden = true;
+  aviso.textContent = '';
+  campo.removeAttribute('aria-invalid');
+  sim.limitePasos = r.n;
+  sim.m?.fijarLimite(r.n);
+  return true;
+}
+
+/** Corre de una vez hasta parar o hasta el límite, sin animar cada paso. */
+function correrHastaElFinal() {
+  if (sim.corriendo || sim.invalida || !sim.m || sim.m.detenida) return;
+  if (!aplicarLimiteCampo()) return;
+  const m = sim.m;
+  m.ejecutar();
+  sim.traza = rehacerTraza();
+  actualizar({ animar: false });
+  sim.vista3d?.mostrar(m);
 }
 
 function ejecutar() {
@@ -242,10 +296,12 @@ function botones() {
   const m = sim.m;
   if (!m) return;
   const fin = m.detenida || m.motivo === 'limite' || !!sim.invalida;
+  const limiteMal = $('#in-limite').getAttribute('aria-invalid') === 'true';
   $('#b-paso').disabled = fin || sim.corriendo;
   $('#b-atras').disabled = m.pasos === 0 || sim.corriendo;
   $('#b-ejecutar').disabled = fin || sim.corriendo;
   $('#b-pausa').disabled = !sim.corriendo;
+  $('#b-hasta-final').disabled = m.detenida || !!sim.invalida || sim.corriendo || limiteMal;
 }
 
 function actualizar(opciones) {
@@ -650,6 +706,7 @@ function aplicarIdioma(l, { redibujar = true } = {}) {
   bannerEjercicio();
   cambioEditor(true);
   mostrarVelocidad();
+  if ($('#in-limite').getAttribute('aria-invalid') === 'true') aplicarLimiteCampo();
   if (sim.def) {
     textosSimulador();
     const v = validar(sim.def);

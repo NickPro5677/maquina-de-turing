@@ -6,9 +6,9 @@
  */
 import * as THREE from '../../vendor/three/three.module.min.js';
 import { OrbitControls } from '../../vendor/three/addons/OrbitControls.js';
+import { PoolCasillas, posicionesVisibles, RADIO_CINTA_3D as RADIO, MARGEN_CINTA_3D, TAMANO_POOL_3D } from './poolCasillas.js';
 
 const PASO = 1.08;          // distancia entre casillas
-const RADIO = 11;           // casillas visibles a cada lado
 const AZUL = 0x0071e3;
 const FONDO = 0xf2f2f5;
 
@@ -57,7 +57,12 @@ export class Vista3D {
     this.crearBase();
     this.crearCabezal();
     this.texturas = new Map();
-    this.casillas = new Map(); // posición -> malla
+    this.casillas = new Map(); // posición visible -> malla
+    this.pool = new PoolCasillas(TAMANO_POOL_3D);
+    this.piezas = [];          // id del pool -> malla (como máximo las visibles)
+    this.geoCasilla = null;
+    this.matLado = null;
+    this._maquina = null;
     this.cintaGrupo = new THREE.Group();
     this.escena.add(this.cintaGrupo);
     this.anim = null;
@@ -198,18 +203,47 @@ export class Vista3D {
     return mat;
   }
 
-  casilla(i) {
-    let c = this.casillas.get(i);
-    if (!c) {
-      const lados = new THREE.MeshStandardMaterial({ color: 0xf7f7f9, roughness: 0.6 });
-      c = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.22, 0.96), [lados, lados, lados, lados, lados, lados]);
-      c.position.set(i * PASO, 0, 0);
-      c.castShadow = true;
-      c.receiveShadow = true;
-      this.cintaGrupo.add(c);
-      this.casillas.set(i, c);
+  /** Malla del pool. La geometría y el material de los lados se comparten. */
+  asegurarPieza(id) {
+    const ya = this.piezas[id];
+    if (ya) return ya;
+    if (!this.geoCasilla) {
+      this.geoCasilla = new THREE.BoxGeometry(0.96, 0.22, 0.96);
+      this.matLado = new THREE.MeshStandardMaterial({ color: 0xf7f7f9, roughness: 0.6 });
     }
+    const lado = this.matLado;
+    const c = new THREE.Mesh(this.geoCasilla, [lado, lado, lado, lado, lado, lado]);
+    c.castShadow = true;
+    c.receiveShadow = true;
+    this.cintaGrupo.add(c);
+    this.piezas[id] = c;
     return c;
+  }
+
+  casilla(i) {
+    return this.casillas.get(i);
+  }
+
+  /**
+   * Suelta las piezas de la cinta y libera geometría, materiales y texturas.
+   * Se llama al reiniciar o al cambiar de máquina, no en cada paso.
+   */
+  liberar() {
+    if (!this.ok) return;
+    this.anim = null;
+    for (const c of this.piezas) if (c) this.cintaGrupo.remove(c);
+    this.geoCasilla?.dispose();
+    this.geoCasilla = null;
+    this.matLado?.dispose();
+    this.matLado = null;
+    for (const mat of this.texturas.values()) {
+      mat.map?.dispose();
+      mat.dispose();
+    }
+    this.texturas.clear();
+    this.piezas = [];
+    this.casillas.clear();
+    this.pool.liberar();
   }
 
   ponerSimbolo(i, s, blanco) {
@@ -220,18 +254,36 @@ export class Vista3D {
     }
   }
 
-  /** Pone todas las casillas visibles con lo que hay en la cinta. */
+  /** Pone las casillas visibles con lo que hay en la cinta, reciclando el pool. */
   sincronizar(m, centro = m.cabezal, excepto = null) {
-    for (const [i, c] of this.casillas) c.visible = Math.abs(i - centro) <= RADIO + 2;
-    for (let i = centro - RADIO - 2; i <= centro + RADIO + 2; i++) {
-      this.casilla(i).visible = true;
+    const { mapa } = this.pool.sincronizar(posicionesVisibles(centro, RADIO, MARGEN_CINTA_3D));
+    const usados = new Set(mapa.values());
+    this.casillas.clear();
+    for (const [i, id] of mapa) {
+      const c = this.asegurarPieza(id);
+      c.visible = true;
+      c.position.x = i * PASO;
+      if (c.userData.pos !== i) {
+        c.userData.pos = i;
+        c.userData.s = undefined;
+        c.scale.set(1, 1, 1);
+      }
+      this.casillas.set(i, c);
       if (i !== excepto) this.ponerSimbolo(i, m.leer(i), m.def.blanco);
+    }
+    for (let id = 0; id < this.piezas.length; id++) {
+      if (this.piezas[id] && !usados.has(id)) this.piezas[id].visible = false;
     }
   }
 
   /** Muestra la máquina sin animación (al cargar, reiniciar o ir atrás). */
   mostrar(m) {
     if (!this.ok) return;
+    // Máquina nueva (reinicio o ejemplo distinto): soltar las piezas de la anterior.
+    if (this._maquina !== m) {
+      this.liberar();
+      this._maquina = m;
+    }
     this.anim = null;
     this.m = m;
     this.sincronizar(m);
