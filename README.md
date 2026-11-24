@@ -1,12 +1,15 @@
-# Máquina de Turing · simulador 2D y 3D
+# Máquina de Turing
+
+Simulador interactivo de la máquina de Turing, en 2D y 3D. Funciona en el teléfono, en la computadora y en un proyector, sin internet.
 
 **Español** · [English](README.en.md)
 
-[![CI](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml/badge.svg)](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml) [![GitHub Pages](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/pages.yml/badge.svg)](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/pages.yml) [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml/badge.svg)](https://github.com/NickPro5677/maquina-de-turing/actions/workflows/ci.yml)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
 
-Simulador interactivo y explicado de la **máquina de Turing**, en español. Muestra la máquina en **2D** (cinta, cabezal, estado y tabla de reglas) y en **3D** (una máquina física que baja el brazo, lee, escribe y mueve la cinta). Funciona en el teléfono, en la computadora y en un proyector, **sin internet**.
+**Demo:** https://nickpro5677.github.io/maquina-de-turing/
 
-**Demo en vivo:** https://nickpro5677.github.io/maquina-de-turing/
+También hay un [archivo único](https://nickpro5677.github.io/maquina-de-turing/maquina-turing.html) (`maquina-turing.html`) que se abre con doble clic, sin servidor.
 
 ![Simulador en escritorio: vista 2D y 3D](docs/img/simulador-escritorio.png)
 
@@ -20,18 +23,22 @@ Simulador interactivo y explicado de la **máquina de Turing**, en español. Mue
 
 ![Simulador en escritorio, modo oscuro](docs/img/simulador-oscuro.png)
 
+## Para qué sirve
+
+Sirve para ver cómo trabaja una máquina de Turing: la cinta, el cabezal, el estado y las reglas. En 2D se ve la tabla y la traza. En 3D se ve una máquina que baja el brazo, lee, escribe y mueve la cinta.
+
 ## Qué incluye
 
-- **Simulador**: paso, paso atrás, ejecutar, pausa, correr hasta el final, reiniciar, velocidad y límite de pasos. Tabla de transiciones con la regla activa resaltada y una **traza paso a paso** (en cintas largas, solo una ventana alrededor del cabezal).
-- **Vista 3D** (Three.js, incluido en el repo): gírala con el dedo o el ratón. Respeta la opción «reducir movimiento» del sistema.
-- **11 ejemplos**: sumar 1 en unario, invertir bits, sumar dos números unarios, incrementador binario, palíndromo, copiar una cadena, paridad, doblar un binario, castor atareado de 2 y de 3 estados, y un bucle sin fin.
-- **Ejercicios**: 5 retos con objetivo, casos de prueba que se comprueban solos (con límite de pasos), pistas que se abren en orden y la solución al final.
-- **Editor**: crea tus reglas en una tabla, con validación en vivo. Guarda varias máquinas con nombre en el dispositivo (abrir y borrar), exporta un `.json` e impórtalo con validación.
-- **Compartir**: el botón **Compartir** crea un enlace con la máquina dentro; quien lo abra la ve en el simulador. En el teléfono abre el menú de compartir del sistema.
-- **Modo oscuro**: sigue al sistema y se puede cambiar con el botón ☾/☀. Se adaptan las vistas 2D y 3D.
-- **Español e inglés**: botón **EN/ES** arriba; toda la interfaz y los textos de teoría están traducidos.
-- **Aprende**: qué es, Turing en 1936, la máquina universal, la tesis de Church–Turing, el problema de la parada, su importancia hoy, una línea de tiempo y referencias.
-- **Modo presentación**: letra grande, pantalla completa y control con flechas o con un presentador (Av Pág / Re Pág).
+- **Simulador:** paso, paso atrás, ejecutar, pausa, correr hasta el final, reiniciar, velocidad y un límite de pasos que se puede cambiar (entre 1 y 1 000 000; 10 000 por defecto). La tabla resalta la regla activa. La traza es paso a paso; en cintas largas solo muestra una ventana alrededor del cabezal.
+- **Vista 3D** (Three.js, incluido en el repo): se gira con el dedo o el ratón. Reutiliza las casillas visibles. Respeta la opción «reducir movimiento» del sistema.
+- **11 ejemplos:** sumar 1 en unario, invertir bits, sumar dos números unarios, incrementador binario, palíndromo, copiar una cadena, paridad, doblar un binario, castor atareado de 2 y de 3 estados, y un bucle sin fin.
+- **Ejercicios:** 5 retos con objetivo, casos de prueba que se comprueban solos (con límite de pasos), pistas que se abren en orden y la solución al final.
+- **Editor:** reglas en una tabla, con validación en vivo. Se pueden guardar varias máquinas con nombre en el dispositivo (abrir o borrar; antes de borrar, la página pregunta). Exporta un `.json` e impórtalo con validación.
+- **Compartir:** el botón **Compartir** crea un enlace con la máquina dentro. En el teléfono abre el menú de compartir del sistema.
+- **Modo oscuro:** sigue al sistema y se puede cambiar con el botón ☾/☀. Se adaptan las vistas 2D y 3D.
+- **Español e inglés:** botón **EN/ES** arriba. Toda la interfaz, la cinta 2D y los textos de teoría están traducidos. En inglés los movimientos son L / R / S.
+- **Aprende:** qué es, Turing en 1936, la máquina universal, la tesis de Church–Turing, el problema de la parada, su importancia hoy, una línea de tiempo y referencias.
+- **Modo presentación:** letra grande, pantalla completa y control con flechas o con un presentador (Av Pág / Re Pág).
 
 ## El ejemplo principal: sumar 1 en unario
 
@@ -71,7 +78,7 @@ python3 -m http.server 8000
 # y abre http://localhost:8000
 ```
 
-Atajos del simulador: **→** paso, **←** paso atrás, **espacio** ejecutar/pausa, **R** reiniciar.
+Atajos del simulador: **→** paso, **←** paso atrás, **espacio** ejecutar/pausa, **R** reiniciar. Siguen funcionando aunque el foco esté en un botón. Si estás escribiendo en un campo, no se disparan. Las pestañas 2D y 3D también se cambian con las flechas.
 
 ### En clase, con proyector
 
@@ -115,26 +122,35 @@ El motor está en [`src/motor/`](src/motor/) y es JavaScript puro, sin DOM, así
 3. escribe, mueve el cabezal y cambia de estado;
 4. guarda lo necesario para poder dar **paso atrás**.
 
-Para cuando llega a un estado final, de aceptación o de rechazo, o cuando no hay regla. Como no se puede saber en general si una máquina parará (problema de la parada), hay un **límite de pasos** (10 000 por defecto). Detalles en [docs/motor.md](docs/motor.md).
+Para cuando llega a un estado final, de aceptación o de rechazo, o cuando no hay regla. Como no se puede saber en general si una máquina parará (problema de la parada), hay un **límite de pasos** (10 000 por defecto, editable). Detalles en [docs/motor.md](docs/motor.md).
 
-## Estructura del proyecto
+## Estructura de archivos
 
 ```text
 maquina-de-turing/
-├── index.html                 # la web (todas las pantallas)
-├── css/estilos.css            # estilo minimalista, tema claro y oscuro
+├── index.html                 # La página (todas las pantallas)
+├── css/estilos.css            # Estilo, tema claro y oscuro
 ├── src/
-│   ├── app.js                 # rutas, simulador, editor, ejercicios, aprende, presentación, tema e idioma
-│   ├── motor/                 # motor puro: maquina, ejemplos, ejercicios, enlace, biblioteca, textos
-│   ├── i18n/                  # textos de la interfaz: es.js, en.js
-│   └── ui/                    # vista2d.js, vista3d.js, aprende.js, aprende.en.js
+│   ├── app.js                 # Rutas, simulador, editor, ejercicios, aprende, presentación, tema e idioma
+│   ├── motor/                 # Motor puro: máquina, ejemplos, ejercicios, enlace, biblioteca, textos
+│   ├── i18n/                  # Textos de la interfaz: es.js, en.js
+│   └── ui/                    # vista2d.js, vista3d.js, poolCasillas.js, aprende.js, aprende.en.js
 ├── vendor/three/              # Three.js r170 + OrbitControls (licencia MIT)
-├── sw.js, manifest.webmanifest, icons/   # uso sin internet e instalación
-├── scripts/construir-archivo-unico.mjs   # genera dist/maquina-turing.html
-├── tests/                     # pruebas con node --test
-├── docs/                      # motor.md, presentacion.md, img/
+├── sw.js, manifest.webmanifest, icons/   # Uso sin internet e instalación
+├── scripts/construir-archivo-unico.mjs   # Genera dist/maquina-turing.html
+├── tests/                     # 92 pruebas con node --test
+├── docs/                      # motor.md, presentacion.md, capturas
 └── .github/workflows/         # ci.yml y pages.yml
 ```
+
+## Tecnologías
+
+- JavaScript (módulos ES, sin framework)
+- HTML y CSS
+- Three.js r170 (incluido en `vendor/three/`)
+- Service worker y manifiesto (PWA)
+- Node.js solo para las pruebas y para construir el archivo único (`esbuild`)
+- GitHub Pages
 
 ## Pruebas
 
@@ -145,6 +161,14 @@ npm run build   # crea dist/maquina-turing.html
 ```
 
 Las pruebas comprueban la traza exacta 111 → 1111, el resultado y los pasos de cada ejemplo, la aceptación y el rechazo de palíndromos, los castores atareados (2 estados: 4 unos en 6 pasos; 3 estados: 6 unos en 14 pasos, y la máquina de 21 pasos), el límite de pasos, el paso atrás, el validador y el JSON. Desde la v1.1.0 también: enlaces de ida y vuelta y enlaces dañados, la validación al importar, el corrector de ejercicios, las máquinas guardadas y que el español y el inglés tengan las mismas claves. Desde la v1.2.0: la traza de una cinta larga, el límite de pasos que se puede cambiar y el pool de la vista 3D.
+
+Si quieres proponer un cambio, mira [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Estado
+
+Activo. El código en `main` es la **v1.2.0** (18 de noviembre de 2026). La [demo](https://nickpro5677.github.io/maquina-de-turing/) ya la sirve. La última *release* de GitHub sigue en [v1.1.0](https://github.com/NickPro5677/maquina-de-turing/releases/tag/v1.1.0); aún no hay etiqueta `v1.2.0`.
+
+No hay issues abiertos. Historial en [CHANGELOG.md](CHANGELOG.md).
 
 ## Licencia
 
